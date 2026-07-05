@@ -1,0 +1,16 @@
+Origen,Destino,Tipo_Relacion,Peso
+Tony Stark,Steve Rogers,Aliado,4
+Tony Stark,Steve Rogers,Conflicto,5
+Tony Stark,Peter Parker,Mentor,5
+Tony Stark,Thanos,Enemigo,5
+Steve Rogers,Bucky Barnes,Mejor Amigo,5
+Steve Rogers,Thanos,Enemigo,5
+Thor,Loki,Hermano,4
+Thor,Loki,Enemigo,3
+Thor,Thanos,Enemigo,5
+Natasha Romanoff,Clint Barton,Mejor Amigo,5
+Bruce Banner,Tony Stark,Colega Científico,4
+Bruce Banner,Natasha Romanoff,Romance,3
+Thanos,Gamora,Padre Adoptivo,4
+Gamora,Peter Quill,Romance,5
+Peter Quill,Thor,Rivalidad Cómica,2

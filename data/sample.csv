@@ -1,0 +1,9 @@
+Origen,Destino,Tipo_Relacion,Peso
+JohnDoe,CompanyXYZ,Employment,5
+CompanyXYZ,ProjectAlpha,Contract,3
+JaneSmith,ProjectAlpha,Contribution,4
+JaneSmith,JohnDoe,Colleague,2
+Alice,CompanyXYZ,Consultant,4
+Bob,ProjectAlpha,Manager,5
+Bob,JaneSmith,Colleague,3
+Bob,Alice,Friend,1
