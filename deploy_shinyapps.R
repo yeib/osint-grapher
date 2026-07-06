@@ -30,12 +30,14 @@ account <- get_arg(args, "--account", "SHINYAPPS_ACCOUNT")
 token   <- get_arg(args, "--token",   "SHINYAPPS_TOKEN")
 secret  <- get_arg(args, "--secret",  "SHINYAPPS_SECRET")
 
-if (is.null(account) || is.null(token) || is.null(secret)) {
-  cat("❌ Faltan credenciales de shinyapps.io.\n\n")
-  cat("Uso:\n")
+if (is.null(account) || is.null(token) || is.null(secret) || account == "" || token == "" || secret == "") {
+  cat("❌ ERROR: Faltan credenciales de shinyapps.io.\n")
+  cat("Si estás en GitHub Actions, debes configurar los siguientes Repository Secrets:\n")
+  cat("  - SHINYAPPS_ACCOUNT\n")
+  cat("  - SHINYAPPS_TOKEN\n")
+  cat("  - SHINYAPPS_SECRET\n\n")
+  cat("Uso local:\n")
   cat("  Rscript deploy_shinyapps.R --account TU_CUENTA --token TU_TOKEN --secret TU_SECRET\n\n")
-  cat("O con variables de entorno:\n")
-  cat("  SHINYAPPS_ACCOUNT=xxx SHINYAPPS_TOKEN=xxx SHINYAPPS_SECRET=xxx Rscript deploy_shinyapps.R\n\n")
   cat("Obtén tus credenciales en: https://www.shinyapps.io → Account → Tokens\n")
   quit(status = 1)
 }
