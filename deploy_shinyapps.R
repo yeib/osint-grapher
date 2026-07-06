@@ -64,10 +64,30 @@ tryCatch({
 })
 
 tryCatch({
-  # Forzar el repositorio a un espejo de CRAN estándar para evitar que ShinyApps.io 
-  # intente descargar paquetes usando el esquema "RSPM/src/contrib" de GitHub Actions
+  # =========================================================================
+  # FIX para GitHub Actions + ShinyApps.io + RSPM:
+  # setup-r-dependencies instala desde RSPM y marca el DESCRIPTION con "Repository: RSPM".
+  # rsconnect/renv copia esto al manifest.json, y ShinyApps.io explota al intentar 
+  # leer la URL "RSPM/src/contrib/...".
+  # Solución: Reescribir "Repository: RSPM" a "Repository: CRAN" en todos los paquetes.
+  # =========================================================================
+  cat("🔧 Aplicando fix de repositorios (RSPM -> CRAN) en la librería local...\n")
+  for (lib in .libPaths()) {
+    pkgs <- list.files(lib, full.names = TRUE)
+    for (pkg in pkgs) {
+      desc_file <- file.path(pkg, "DESCRIPTION")
+      if (file.exists(desc_file)) {
+        lines <- readLines(desc_file, warn = FALSE)
+        if (any(grepl("Repository:.*RSPM", lines))) {
+          lines <- gsub("Repository:.*RSPM", "Repository: CRAN", lines)
+          writeLines(lines, desc_file)
+        }
+      }
+    }
+  }
   options(repos = c(CRAN = "https://cloud.r-project.org"))
-  
+  cat("✅ Fix de repositorios aplicado.\n\n")
+
   rsconnect::deployApp(
     appDir    = "shinyapp",         # Directorio con app.R y módulos
     appName   = "nexusgraph",       # Nombre de la app en shinyapps.io
