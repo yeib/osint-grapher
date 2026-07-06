@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      # Solo hacemos deploy si cambian archivos relevantes de la app web
+      # Deploy si cambian los módulos principales O la app de shinyapps.io
+      - 'R/**'
       - 'shinyapp/**'
       - 'deploy_shinyapps.R'
       - '.github/workflows/deploy.yml'
@@ -18,6 +19,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Sincronizar R/ → shinyapp/ antes de deployar
+      # Así nunca se desincronizarán los módulos entre versiones
+      - name: Sync R/ modules into shinyapp/
+        run: |
+          cp R/process_data.R shinyapp/process_data.R
+          cp R/visualize.R shinyapp/visualize.R
+          echo "✅ Módulos sincronizados: R/ → shinyapp/"
 
       # Instalar R y dependencias del sistema
       - name: Set up R
@@ -34,7 +43,7 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rsconnect, any::shiny, any::bslib, any::shinyjs, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel
+          extra-packages: any::rsconnect, any::shiny, any::bslib, any::shinyjs, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel, any::readr, any::readxl, any::htmltools
           needs: check
           cache-version: 2
 
