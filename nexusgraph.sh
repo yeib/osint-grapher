@@ -27,6 +27,10 @@ for arg in "$@"; do
             ;;
         --port=*)
             PORT="${arg#--port=}"
+            if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+                echo "❌ Error: --port debe ser un número entero. Recibido: '$PORT'"
+                exit 1
+            fi
             ;;
         *)
             CLI_ARGS+=("$arg")
