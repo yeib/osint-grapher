@@ -55,13 +55,30 @@ cat("🚀 Desplegando NexusGraph en shinyapps.io...\n")
 cat("   → Cuenta:", account, "\n")
 cat("   → App:    nexusgraph\n\n")
 
-rsconnect::deployApp(
-  appDir    = "shinyapp",         # Directorio con app.R y módulos
-  appName   = "nexusgraph",       # Nombre de la app en shinyapps.io
-  account   = account,
-  forceUpdate = TRUE,
-  launch.browser = FALSE          # No abrir el navegador en VPS
-)
+cat("🔍 Chequeando dependencias locales antes de deployar...\n")
+tryCatch({
+  deps <- rsconnect::appDependencies("shinyapp")
+  cat("✅ Encontradas", nrow(deps), "dependencias.\n")
+}, error = function(e) {
+  cat("⚠️ Advertencia al buscar dependencias:", e$message, "\n")
+})
 
-cat("\n✅ ¡Publicado!\n")
-cat("   → URL: https://", account, ".shinyapps.io/nexusgraph/\n", sep = "")
+tryCatch({
+  rsconnect::deployApp(
+    appDir    = "shinyapp",         # Directorio con app.R y módulos
+    appName   = "nexusgraph",       # Nombre de la app en shinyapps.io
+    account   = account,
+    forceUpdate = TRUE,
+    launch.browser = FALSE          # No abrir el navegador en VPS
+  )
+  
+  cat("\n✅ ¡Publicado!\n")
+  cat("   → URL: https://", account, ".shinyapps.io/nexusgraph/\n", sep = "")
+}, error = function(e) {
+  cat("\n❌ ERROR CRÍTICO durante el despliegue:\n")
+  cat("Mensaje de error:\n", e$message, "\n\n")
+  cat("Revisa si:\n")
+  cat("1. Las credenciales son correctas (Token/Secret)\n")
+  cat("2. Todos los paquetes requeridos por app.R están en el DESCRIPTION\n")
+  quit(status = 1)
+})
