@@ -56,7 +56,7 @@ load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL
   required_cols <- c("Origen", "Destino")
   missing_cols <- setdiff(required_cols, colnames(df))
   if (length(missing_cols) > 0) {
-    stop(paste("[Error] El CSV no contiene las columnas seleccionadas como Origen/Destino. (Seleccionado:", col_origen, "y", col_destino, ")"))
+    stop(paste("[Error] El CSV no contiene las columnas requeridas como Origen/Destino. (Seleccionado:", col_origen, "y", col_destino, ")"))
   }
   
   # IMPORTANTE: Las columnas opcionales deben crearse/normalizarse ANTES de usarlas
