@@ -11,7 +11,7 @@ library(readr)
 # apuntando a la raíz del proyecto. Esto garantiza que source() funcione
 # sin importar desde qué directorio ejecute testthat los archivos.
 root <- Sys.getenv("NEXUSGRAPH_ROOT", unset = getwd())
-source(file.path(root, "src", "process_data.R"))
+source(file.path(root, "R", "process_data.R"))
 
 # =============================================================================
 # Helpers: Crear archivos CSV temporales para tests

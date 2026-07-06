@@ -10,7 +10,7 @@ library(igraph)
 # .NEXUSGRAPH_ROOT es una variable de entorno que establece run_tests.R
 # apuntando a la raíz del proyecto.
 root <- Sys.getenv("NEXUSGRAPH_ROOT", unset = getwd())
-source(file.path(root, "src", "process_data.R"))
+source(file.path(root, "R", "process_data.R"))
 
 # =============================================================================
 # Helper: Crear dataframes de prueba directamente (sin necesidad de archivos)

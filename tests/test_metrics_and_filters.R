@@ -10,7 +10,7 @@ library(dplyr)
 library(igraph)
 
 root <- Sys.getenv("NEXUSGRAPH_ROOT", unset = getwd())
-source(file.path(root, "src", "process_data.R"))
+source(file.path(root, "R", "process_data.R"))
 
 # =============================================================================
 # Helper

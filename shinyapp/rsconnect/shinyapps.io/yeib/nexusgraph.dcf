@@ -1,0 +1,10 @@
+name: nexusgraph
+title:
+username: yeib
+account: yeib
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17586522
+bundleId: 12228918
+url: https://yeib.shinyapps.io/nexusgraph/
+version: 1

@@ -1,121 +1,120 @@
-#' @title Script Principal de Orquestación: NexusGraph
-#' @description 
-#' Punto de entrada por línea de comandos para NexusGraph.
-#' Gestiona el parseo de argumentos y coordina el flujo de los módulos
+#!/usr/bin/env Rscript
+# =============================================================================
+# nexusgraph — CLI Entry Point
+# =============================================================================
+#' Este script actúa como la interfaz de línea de comandos (CLI) principal 
+#' para la herramienta NexusGraph, orquestando las funciones 
 #' de procesamiento de datos y visualización.
 
 suppressPackageStartupMessages(library(optparse))
 suppressPackageStartupMessages(library(igraph)) # Requerido por vcount(), ecount()
 
+# Determinar la ruta del script para cargar módulos de forma robusta
+# Ya sea ejecutando desde ./nexusgraph.sh o directamente con Rscript src/main.R
+args_command <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("--file=", "", args_command[grep("--file=", args_command)])
+if (length(script_path) > 0 && nzchar(script_path[1])) {
+  project_root <- dirname(dirname(normalizePath(script_path[1])))
+} else {
+  project_root <- getwd()
+}
+
 # Carga de módulos de la aplicación.
-# El wrapper en bash ya se encarga de asegurar que el Working Directory
-# sea la raíz del proyecto, así que podemos usar rutas relativas seguras.
-source("src/process_data.R")
-source("src/visualize.R")
+source(file.path(project_root, "R", "process_data.R"))
+source(file.path(project_root, "R", "visualize.R"))
 
 # 1. Definición de Parámetros por Consola (CLI)
 # -----------------------------------------------------------------------------
 option_list <- list(
-  make_option(c("-i", "--input"), type = "character", default = NULL, 
-              help = "Ruta al archivo CSV o Excel (.xlsx) de entrada [Requerido]", 
-              metavar = "Ruta"),
-  
-  make_option(c("-o", "--output"), type = "character", default = "output/reporte.html", 
-              help = "Ruta donde se guardará el visor interactivo HTML [Por defecto: %default]", 
-              metavar = "Ruta"),
-  
+  make_option(c("-i", "--input"), type = "character", default = NULL,
+              help = "Ruta al dataset de entrada (CSV o Excel). Obligatorio.", metavar = "FILE"),
+  make_option(c("-o", "--output"), type = "character", default = "output/reporte.html",
+              help = "Ruta del archivo HTML interactivo generado. [default: %default]", metavar = "FILE"),
   make_option(c("-s", "--static"), type = "character", default = NULL,
-              help = "Ruta opcional para generar una imagen estática (PNG o PDF). Si se omite, no se genera.", 
-              metavar = "Ruta"),
-  
+              help = "Ruta para exportar un grafo estático (PNG, JPEG, PDF). Opcional.", metavar = "FILE"),
   make_option(c("--sheet"), type = "character", default = "1",
-              help = "Nombre o número de la hoja de Excel a leer [Por defecto: %default]", 
-              metavar = "Hoja"),
-
+              help = "Nombre o índice de la hoja (solo si la entrada es Excel). [default: %default]"),
   make_option(c("--min-peso"), type = "numeric", default = 0,
-              help = "Ignorar relaciones con Peso menor a este valor [Por defecto: %default]", 
-              metavar = "Min"),
-  
+              help = "Peso mínimo para incluir la relación en el grafo. [default: %default]"),
   make_option(c("--tipo"), type = "character", default = NULL,
-              help = "Filtrar por tipos de relación específicos, separados por coma (ej: 'Amigo,Enemigo')", 
-              metavar = "Tipos"),
-  
+              help = "Filtro por Tipo_Relacion. Puedes pasar varios tipos separados por comas. [default: Todos]"),
   make_option(c("--undirected"), action = "store_true", default = FALSE,
-              help = "Genera un grafo no dirigido (relaciones bidireccionales)")
+              help = "Tratar el grafo como no dirigido (conexiones bidireccionales). [default: FALSE]")
 )
 
 opt_parser <- OptionParser(
-  usage = "Uso: ./nexusgraph.sh -i <entrada.csv> [opciones]",
+  usage = "Uso: ./nexusgraph.sh [opciones]",
   option_list = option_list,
-  description = "\nNexusGraph: Transformador de archivos CSV a grafos interactivos OSINT."
+  description = "Analizador OSINT de Redes y Grafos de Relación."
 )
 
 opt <- parse_args(opt_parser)
 
-# 2. Validación Inicial de Argumentos
+# 2. Validación de Argumentos
 # -----------------------------------------------------------------------------
-if (is.null(opt$input)){
+if (is.null(opt$input)) {
   print_help(opt_parser)
-  cat("\n[Error Fatal] Debes proporcionar un archivo de entrada usando --input o -i\n")
-  quit(status = 1)
+  stop("[Error] El archivo de entrada (-i/--input) es obligatorio.", call. = FALSE)
 }
 
-# 3. Flujo de Ejecución (Pipeline)
+# 3. Flujo Principal envuelto en tryCatch
 # -----------------------------------------------------------------------------
-cat("==================================================\n")
-cat("      🚀 Iniciando NexusGraph Analyzer \n")
-cat("==================================================\n\n")
-
-# tryCatch es el patrón correcto para "capturar el error y terminar el proceso".
-# withCallingHandlers propaga el error original después del handler, generando
-# un stack trace crudo. tryCatch lo captura sin propagarlo.
-tryCatch(
-  {
-    # Paso A: Lectura y Limpieza
-    cat("[1/4] Leyendo y validando datos crudos...\n")
-    cat("      -> Origen:", opt$input, "\n")
-    
-    # Procesar filtros (tipos separados por coma)
-    tipos_filtro <- NULL
-    if (!is.null(opt$tipo)) {
-      tipos_filtro <- trimws(unlist(strsplit(opt$tipo, ",")))
-    }
-
-    df <- load_and_clean_data(opt$input, sheet = opt$sheet, min_peso = opt$`min-peso`, tipos = tipos_filtro)
-    cat("      -> Listo. Encontradas", nrow(df), "relaciones válidas (tras limpieza y filtros).\n\n")
-
-    # Paso B: Creación del Modelo
-    cat("[2/4] Construyendo el modelo matemático de red...\n")
-    g <- generate_graph(df, directed = !opt$undirected)
-    cat("      -> Listo. Red compuesta por", vcount(g), "entidades (nodos) y", ecount(g), "conexiones (aristas).\n\n")
-
-    # Paso C: Inteligencia y Métricas de Red
-    cat("[3/4] Calculando métricas de centralidad y comunidades...\n")
-    g <- compute_network_metrics(g)
-    cat("      -> Listo. Nodos coloreados por comunidad automáticamente.\n\n")
-
-    # Mostrar top nodos por consola
-    print_top_nodes(g)
-
-    # Paso D: Visualización y Exportación
-    cat("[4/4] Renderizando salidas gráficas...\n")
-
-    # Interactivo siempre se genera
-    generate_interactive_html(g, opt$output)
-    
-    # Estático solo si el usuario lo solicitó
-    if (!is.null(opt$static)) {
-      cat("\n      [Opcional] Generando reporte estático...\n")
-      generate_static_report(g, opt$static)
-    }
-    
-    cat("\n==================================================\n")
-    cat(" 🎉 ¡Proceso completado con éxito! \n")
-    cat("==================================================\n")
-  },
-  error = function(e) {
-    cat("\n❌ [Error Fatal]", conditionMessage(e), "\n")
-    cat("Abortando NexusGraph. Revisa tu archivo de entrada o los parámetros usados.\n")
-    quit(status = 1)
+tryCatch({
+  cat("==================================================\n")
+  cat("      🚀 Iniciando NexusGraph Analyzer \n")
+  cat("==================================================\n\n")
+  
+  # Parsear lista de tipos si fue provista
+  tipos_filtro <- NULL
+  if (!is.null(opt$tipo)) {
+    tipos_filtro <- trimws(unlist(strsplit(opt$tipo, ",")))
   }
-)
+  
+  # --- Paso 1: Lectura y Limpieza ---
+  cat("[1/4] Leyendo y validando datos crudos...\n")
+  cat(sprintf("      -> Origen: %s \n", opt$input))
+  
+  df_clean <- load_and_clean_data(
+    file_path = opt$input, 
+    sheet = opt$sheet, 
+    min_peso = opt$`min-peso`, 
+    tipos = tipos_filtro
+  )
+  cat(sprintf("      -> Listo. Encontradas %d relaciones válidas (tras limpieza y filtros).\n\n", nrow(df_clean)))
+  
+  # --- Paso 2: Generación del Grafo ---
+  cat("[2/4] Construyendo el modelo matemático de red...\n")
+  
+  # Si el usuario pasó --undirected, directed será FALSE. Por defecto es TRUE.
+  g <- generate_graph(df_clean, directed = !opt$undirected)
+  cat(sprintf("      -> Listo. Red compuesta por %d entidades (nodos) y %d conexiones (aristas).\n\n", 
+              vcount(g), ecount(g)))
+  
+  # --- Paso 3: Análisis de Red (Centralidad y Comunidades) ---
+  cat("[3/4] Calculando métricas de centralidad y comunidades...\n")
+  g <- compute_network_metrics(g)
+  cat("      -> Listo. Nodos coloreados por comunidad automáticamente.\n\n")
+  
+  print_top_nodes(g)
+  
+  # --- Paso 4: Visualización ---
+  cat("[4/4] Renderizando salidas gráficas...\n")
+  
+  generate_interactive_html(g, opt$output)
+  
+  if (!is.null(opt$static)) {
+    generate_static_report(g, opt$static)
+  }
+  
+  cat("\n==================================================\n")
+  cat(" 🎉 ¡Proceso completado con éxito! \n")
+  cat("==================================================\n")
+  
+}, error = function(e) {
+  # tryCatch maneja la excepción, limpia el output y finaliza con error.
+  cat("\n==================================================\n")
+  cat(" ❌ Ejecución fallida \n")
+  cat("==================================================\n")
+  cat(e$message, "\n")
+  quit(status = 1)
+})

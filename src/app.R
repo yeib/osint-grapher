@@ -16,8 +16,8 @@ if (project_root == "") {
     project_root <- getwd()
   }
 }
-source(file.path(project_root, "src", "process_data.R"))
-source(file.path(project_root, "src", "visualize.R"))
+source(file.path(project_root, "R", "process_data.R"))
+source(file.path(project_root, "R", "visualize.R"))
 
 # =============================================================================
 # UI

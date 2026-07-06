@@ -1,7 +1,7 @@
-Package: NexusGraph
+Package: nexusgraph
 Type: Package
 Title: Herramienta OSINT para Transformar CSV en Grafos Interactivos
-Version: 0.1.0
+Version: 0.2.0
 Author: yeib
 Maintainer: yeib <yeib@example.com>
 Description: Procesa archivos de datos tabulares y los convierte en visualizaciones 
