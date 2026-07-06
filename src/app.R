@@ -3,13 +3,7 @@ suppressPackageStartupMessages(library(bslib))
 suppressPackageStartupMessages(library(shinyjs))
 suppressPackageStartupMessages(library(visNetwork))
 
-args_command <- commandArgs(trailingOnly = FALSE)
-script_path <- sub("--file=", "", args_command[grep("--file=", args_command)])
-if (length(script_path) > 0 && nzchar(script_path[1])) {
-  project_root <- dirname(dirname(normalizePath(script_path[1])))
-} else {
-  project_root <- getwd()
-}
+project_root <- Sys.getenv("NEXUSGRAPH_ROOT", unset = dirname(getwd()))
 source(file.path(project_root, "R", "process_data.R"))
 source(file.path(project_root, "R", "visualize.R"))
 
