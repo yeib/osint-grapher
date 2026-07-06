@@ -1,5 +1,7 @@
 # 📊 NexusGraph (R Data Visualizer)
 
+[![CI](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml/badge.svg)](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml)
+
 Bienvenido al proyecto de visualización de datos e inteligencia (OSINT).
 Este proyecto está escrito en **R** y se encarga de tomar archivos de datos en bruto (.csv o .xlsx) y transformarlos en gráficos de red interactivos y reportes visuales de alta calidad.
 
