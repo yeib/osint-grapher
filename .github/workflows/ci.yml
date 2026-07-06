@@ -34,8 +34,7 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
-          needs: check
+          extra-packages: any::rcmdcheck, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel, any::readr, any::readxl, any::htmltools, any::optparse, any::shiny, any::bslib, any::shinyjs
           cache-version: 2
 
       # 5. Correr la suite de tests unitarios
