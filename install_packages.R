@@ -22,7 +22,7 @@ new_packages <- required_packages[!(required_packages %in% installed.packages()[
 # Instalar los faltantes
 if(length(new_packages)) {
   cat("Se instalarán los siguientes paquetes:", paste(new_packages, collapse = ", "), "\n")
-  install.packages(new_packages, repos = "http://cran.rstudio.com/")
+  install.packages(new_packages, repos = "https://cran.rstudio.com/")
 } else {
   cat("¡Todos los paquetes necesarios ya están instalados!\n")
 }

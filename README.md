@@ -4,15 +4,25 @@ Bienvenido al proyecto de visualización de datos e inteligencia (OSINT).
 Este proyecto está escrito en **R** y se encarga de tomar archivos de datos en bruto (.csv o .xlsx) y transformarlos en gráficos de red interactivos y reportes visuales de alta calidad.
 
 ## 📁 Estructura
-- `/src`: Scripts de R (`.R` o Jupyter Notebooks).
-- `/data`: Archivos `.csv` de prueba (ej: exportados desde Scrapic).
-- `/output`: Los reportes en PDF y archivos HTML generados.
+- `/src`: Scripts principales de R.
+- `/data`: Archivos de datos de entrada (`.csv` o `.xlsx`).
+- `/output`: Los reportes generados (ignorados por git, se crean al correr el programa).
 
 ## 🚀 Uso
 
-### 1. Instalación de Dependencias
+### 1. Instalación de Dependencias del Sistema
 
-Asegúrate de tener R instalado en tu sistema. Luego, instala las librerías necesarias ejecutando:
+NexusGraph requiere **R** y **pandoc** instalados en el sistema:
+
+```bash
+# En Ubuntu/Debian
+sudo apt-get install -y r-base pandoc
+
+# En macOS (con Homebrew)
+brew install r pandoc
+```
+
+Luego, instala las librerías de R necesarias:
 
 ```bash
 Rscript install_packages.R
@@ -25,5 +35,16 @@ Puedes ejecutar NexusGraph a través del script principal de Bash:
 ```bash
 ./nexusgraph.sh -i data/sample.csv -o output/reporte.html -s output/estatico.png
 ```
+
+### 3. Formato del archivo de entrada
+
+El archivo CSV o Excel debe contener al menos las columnas `Origen` y `Destino`. Las demás son opcionales:
+
+| Columna | Requerida | Descripción |
+|---|---|---|
+| `Origen` | ✅ | Entidad de origen de la relación |
+| `Destino` | ✅ | Entidad de destino de la relación |
+| `Tipo_Relacion` | ❌ | Etiqueta del tipo de vínculo (ej: Empleado, Aliado) |
+| `Peso` | ❌ | Intensidad numérica de la relación (por defecto: 1) |
 
 ¡Todo listo para analizar datos!

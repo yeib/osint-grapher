@@ -74,6 +74,11 @@ load_and_clean_data <- function(file_path) {
 #' @param df Dataframe limpio (salida de load_and_clean_data).
 #' @return Objeto igraph.
 generate_graph <- function(df) {
+  # Validar que el dataframe no esté vacío tras la limpieza
+  if (nrow(df) == 0) {
+    stop("[Error] El archivo no contiene relaciones válidas tras la limpieza. Verifica que los campos Origen y Destino no estén todos vacíos.")
+  }
+
   # Extraer listado de nodos únicos (vértices)
   sources <- df %>% distinct(Origen) %>% rename(name = Origen)
   targets <- df %>% distinct(Destino) %>% rename(name = Destino)
@@ -82,8 +87,11 @@ generate_graph <- function(df) {
     distinct(name)
   
   # Extraer aristas (relaciones entre nodos)
+  # Convertimos Tipo_Relacion a factor para que ggraph/visNetwork puedan
+  # mapear colores por categoría correctamente, evitando reciclado silencioso.
   edges <- df %>%
-    select(from = Origen, to = Destino, type = Tipo_Relacion, weight = Peso)
+    select(from = Origen, to = Destino, type = Tipo_Relacion, weight = Peso) %>%
+    mutate(type = as.factor(type))
   
   # Generar el modelo matemático
   # directed = TRUE asume que la relación va de Origen -> Destino
