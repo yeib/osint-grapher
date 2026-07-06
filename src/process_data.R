@@ -124,22 +124,31 @@ compute_network_metrics <- function(g) {
   V(g)$betweenness <- round(betweenness(g, directed = is_directed(g)), 2)
   
   # Detección de comunidades (clusters)
-  # Louvain es muy rápido y bueno para redes grandes. Solo funciona en grafos no dirigidos
-  # así que temporalmente lo convertimos para el cálculo.
-  g_undirected <- as_undirected(g, mode = "collapse")
-  communities <- cluster_louvain(g_undirected)
-  
-  # Asignamos el grupo a cada nodo
-  V(g)$group <- membership(communities)
-  V(g)$community <- paste("Comunidad", membership(communities))
+  # cluster_louvain requiere al menos 2 nodos. Con 1 nodo, asignamos comunidad 1 directamente.
+  if (vcount(g) >= 2) {
+    g_undirected <- as_undirected(g, mode = "collapse")
+    communities <- cluster_louvain(g_undirected)
+    V(g)$group <- membership(communities)
+    V(g)$community <- paste("Comunidad", membership(communities))
+  } else {
+    V(g)$group <- 1L
+    V(g)$community <- "Comunidad 1"
+  }
   
   return(g)
 }
+
 
 #' @name print_top_nodes
 #' @description Imprime un reporte por consola de los nodos más conectados (hubs).
 #' @param g Grafo igraph con métricas calculadas.
 print_top_nodes <- function(g) {
+  # Validar que el grafo tenga métricas calculadas
+  if (is.null(V(g)$degree)) {
+    cat("[Aviso] Métricas no calculadas. Ejecuta compute_network_metrics() primero.\n")
+    return(invisible(NULL))
+  }
+  
   # Extraer datos de nodos
   nodes_df <- data.frame(
     name = V(g)$name,
@@ -153,10 +162,16 @@ print_top_nodes <- function(g) {
     arrange(desc(degree), desc(betweenness)) %>% 
     head(5)
   
-  cat("📊 Top Entidades Más Conectadas (Hubs):\n")
-  for(i in 1:nrow(top_hubs)) {
-    cat(sprintf("   %d. %-15s — %d conexiones (Betweenness: %.2f | %s)\n", 
-                i, top_hubs$name[i], top_hubs$degree[i], top_hubs$betweenness[i], top_hubs$community[i]))
+  cat("\ud83d\udcca Top Entidades Más Conectadas (Hubs):\n")
+  
+  # Proteger contra dataframe vacío
+  if (nrow(top_hubs) == 0) {
+    cat("   (Sin nodos para mostrar con los filtros actuales)\n")
+  } else {
+    for (i in seq_len(nrow(top_hubs))) {
+      cat(sprintf("   %d. %-15s \u2014 %d conexiones (Betweenness: %.2f | %s)\n", 
+                  i, top_hubs$name[i], top_hubs$degree[i], top_hubs$betweenness[i], top_hubs$community[i]))
+    }
   }
   cat("\n")
 }

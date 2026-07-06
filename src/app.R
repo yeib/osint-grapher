@@ -3,9 +3,18 @@ suppressPackageStartupMessages(library(bslib))
 suppressPackageStartupMessages(library(shinyjs))
 suppressPackageStartupMessages(library(visNetwork))
 
-# Aseguramos que el working directory es la raíz del proyecto
-source("src/process_data.R")
-source("src/visualize.R")
+# Resolver la raíz del proyecto relativa a este archivo, sin depender del CWD.
+# Cuando se lanza desde nexusgraph.sh --web, el CWD ya es la raíz. 
+# Cuando se lanza directamente con `Rscript src/app.R`, necesitamos subir un nivel.
+app_dir <- normalizePath(dirname(sys.frame(1)$ofile), mustWork = FALSE)
+if (basename(app_dir) == "src") {
+  project_root <- dirname(app_dir)
+} else {
+  project_root <- app_dir  # Ya estamos en la raíz
+}
+source(file.path(project_root, "src", "process_data.R"))
+source(file.path(project_root, "src", "visualize.R"))
+
 
 # Definir la interfaz de usuario usando bslib (diseño moderno y limpio)
 ui <- page_sidebar(
@@ -38,12 +47,11 @@ ui <- page_sidebar(
   # Panel Principal
   layout_columns(
     col_widths = c(12),
-    row_heights = c("70%", "30%"),
     
     card(
       full_screen = TRUE,
       card_header("Grafo Interactivo (Mover, hacer zoom y arrastrar nodos)"),
-      visNetworkOutput("graph", height = "100%")
+      visNetworkOutput("graph", height = "550px")
     ),
     
     card(
