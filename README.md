@@ -40,7 +40,26 @@ docker run --rm \
 docker run --rm -p 3838:3838 nexusgraph --web
 ```
 
-### Opción B — Instalación local con R
+### Opción B — R Package (devtools)
+
+Si ya tienes R instalado, puedes instalar NexusGraph nativamente como paquete y usarlo desde la consola de R o RStudio:
+
+```R
+# Instalar paquete devtools si no lo tienes
+install.packages("devtools")
+
+# Instalar NexusGraph directo desde GitHub
+devtools::install_github("yeib/osint-grapher")
+
+# Usarlo en R
+library(nexusgraph)
+df <- load_and_clean_data("mi_archivo.csv")
+g <- generate_graph(df)
+g <- compute_network_metrics(g)
+generate_interactive_html(g, "output.html")
+```
+
+### Opción C — Instalación local con R (Clonar repositorio)
 
 NexusGraph requiere **R (≥ 4.1)** y **pandoc**:
 
