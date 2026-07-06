@@ -3,8 +3,13 @@ suppressPackageStartupMessages(library(bslib))
 suppressPackageStartupMessages(library(shinyjs))
 suppressPackageStartupMessages(library(visNetwork))
 
-# En shinyapps.io, el CWD al ejecutar es el directorio de la app.
-# Ambos módulos están en el mismo directorio, así que el source es directo.
+args_command <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("--file=", "", args_command[grep("--file=", args_command)])
+if (length(script_path) > 0 && nzchar(script_path[1])) {
+  project_root <- dirname(dirname(normalizePath(script_path[1])))
+} else {
+  project_root <- getwd()
+}
 source(file.path(project_root, "R", "process_data.R"))
 source(file.path(project_root, "R", "visualize.R"))
 
