@@ -29,25 +29,26 @@ jobs:
           sudo apt-get install -y pandoc
 
       # 4. Instalar todas las dependencias (R y sistema) usando pak (oficial)
-      # Esto lee automáticamente el archivo DESCRIPTION, detecta que usamos igraph,
-      # ggraph, etc. y se encarga de hacer apt-get install de libxml2, libglpk, etc.
+      # Lee automáticamente DESCRIPTION, instala librerías de sistema (libxml2, libglpk, etc.)
+      # cache-version activa el caché de paquetes para que runs sucesivos tarden segundos.
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          cache-version: 2
 
-      # 7. Correr la suite de tests
+      # 5. Correr la suite de tests unitarios
       - name: Run unit tests
         run: Rscript tests/run_tests.R
 
-      # 8. Prueba de integración end-to-end: correr el script real con datos de muestra
+      # 6. Prueba de integración end-to-end con datos de muestra (commiteados en /data)
       - name: Integration test (end-to-end run with marvel_sample.csv)
         run: |
           chmod +x nexusgraph.sh
           ./nexusgraph.sh -i data/marvel_sample.csv -o output/reporte.html
 
-      # 9. Verificar que el HTML fue generado correctamente
+      # 7. Verificar que el HTML fue generado correctamente
       - name: Verify HTML output was created
         run: |
           if [ ! -f "output/reporte.html" ]; then

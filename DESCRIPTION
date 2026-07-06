@@ -18,6 +18,8 @@ Imports:
     ggraph,
     ggrepel,
     optparse,
+    htmltools,
+    tools,
     shiny,
     bslib,
     shinyjs

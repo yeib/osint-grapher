@@ -75,6 +75,13 @@ server <- function(input, output, session) {
         tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
       }
       
+      # Validar extensión del archivo antes de procesar (AP6)
+      ext <- tolower(tools::file_ext(input$file$name))
+      if (!ext %in% c("csv", "xls", "xlsx")) {
+        showNotification(paste("Formato no soportado:", ext, ". Usa CSV o Excel."), type = "error", duration = 10)
+        return(NULL)
+      }
+      
       df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = input$min_peso, tipos = tipos_filtro)
       g <- generate_graph(df, directed = !input$undirected)
       g <- compute_network_metrics(g)
@@ -113,6 +120,10 @@ server <- function(input, output, session) {
   )
   
   # Manejador de descarga PNG
+  # Shiny pasa un path temporal SIN extensión al content handler.
+  # generate_static_report detectaría ext="" y renombraría el archivo, pero Shiny
+  # no encontraría el archivo en el path original. Por eso escribimos en un tmp con
+  # extensión explícita y luego copiamos al destino que Shiny espera.
   output$download_png <- downloadHandler(
     filename = function() {
       paste("nexusgraph-", Sys.Date(), ".png", sep="")
@@ -120,7 +131,10 @@ server <- function(input, output, session) {
     content = function(file) {
       g <- graph_data()
       req(g)
-      generate_static_report(g, file)
+      tmp <- paste0(file, ".png")
+      generate_static_report(g, tmp)
+      file.copy(tmp, file)
+      file.remove(tmp)
     }
   )
 }

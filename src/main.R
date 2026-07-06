@@ -5,6 +5,7 @@
 #' de procesamiento de datos y visualización.
 
 suppressPackageStartupMessages(library(optparse))
+suppressPackageStartupMessages(library(igraph)) # Requerido por vcount(), ecount()
 
 # Carga de módulos de la aplicación.
 # El wrapper en bash ya se encarga de asegurar que el Working Directory
@@ -65,7 +66,10 @@ cat("==================================================\n")
 cat("      🚀 Iniciando NexusGraph Analyzer \n")
 cat("==================================================\n\n")
 
-withCallingHandlers(
+# tryCatch es el patrón correcto para "capturar el error y terminar el proceso".
+# withCallingHandlers propaga el error original después del handler, generando
+# un stack trace crudo. tryCatch lo captura sin propagarlo.
+tryCatch(
   {
     # Paso A: Lectura y Limpieza
     cat("[1/4] Leyendo y validando datos crudos...\n")
@@ -96,10 +100,10 @@ withCallingHandlers(
     # Paso D: Visualización y Exportación
     cat("[4/4] Renderizando salidas gráficas...\n")
 
-    # Interactivo siempre se genera (a menos que haya un error fatal)
+    # Interactivo siempre se genera
     generate_interactive_html(g, opt$output)
     
-    # Estático solo se genera si el usuario lo solicitó explícitamente
+    # Estático solo si el usuario lo solicitó
     if (!is.null(opt$static)) {
       cat("\n      [Opcional] Generando reporte estático...\n")
       generate_static_report(g, opt$static)

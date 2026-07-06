@@ -67,10 +67,12 @@ load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL
   }
 
   # Limpieza de los datos ya con todas las columnas presentes:
+  # - Normaliza strings (trimws) para evitar que " Alice" y "Alice" sean entidades distintas
   # - Elimina filas con nodos origen o destino nulos
   # - Elimina relaciones exactamente duplicadas (mismos Origen + Destino + Tipo)
   df_clean <- df %>%
-    filter(!is.na(Origen) & !is.na(Destino)) %>%
+    mutate(Origen = trimws(Origen), Destino = trimws(Destino)) %>%
+    filter(!is.na(Origen) & !is.na(Destino) & Origen != "" & Destino != "") %>%
     filter(Peso >= min_peso) %>%
     distinct(Origen, Destino, Tipo_Relacion, .keep_all = TRUE)
   

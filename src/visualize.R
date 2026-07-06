@@ -8,8 +8,10 @@ suppressPackageStartupMessages(library(igraph))
 suppressPackageStartupMessages(library(visNetwork))
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(ggraph))
-# ggrepel es una dependencia indirecta requerida por geom_node_text(repel = TRUE)
+# ggrepel debe cargarse explícitamente: ggraph lo invoca internamente para
+# geom_node_text(repel = TRUE), pero requiere que el namespace esté disponible.
 suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(htmltools)) # Para escapar HTML en tooltips
 
 #' @name build_visnetwork_object
 #' @description Crea el widget interactivo de visNetwork sin guardarlo a disco. Útil para Shiny.
@@ -32,8 +34,8 @@ build_visnetwork_object <- function(g) {
   
   # Configurar propiedades de las aristas (edges)
   if ("type" %in% colnames(data$edges)) {
-    # El título se mostrará como un tooltip al pasar el mouse por encima
-    data$edges$title <- paste("Tipo de relación:", data$edges$type)
+    # htmlEscape evita inyección de HTML malicioso desde los datos del CSV
+    data$edges$title <- htmlEscape(paste("Tipo de relación:", data$edges$type))
   }
   
   # Asignar grosor de aristas basado en su peso
@@ -83,6 +85,7 @@ generate_interactive_html <- function(g, output_path) {
   }, error = function(e) {
     stop(paste("[Error] No se pudo guardar el archivo HTML:", e$message))
   })
+  invisible(output_path)  # Retornar ruta para composabilidad
 }
 
 #' @name generate_static_report
@@ -110,7 +113,7 @@ generate_static_report <- function(g, output_path) {
       geom_edge_link(aes(edge_alpha = weight, edge_width = weight, color = type), 
                      arrow = arrow(length = unit(2, 'mm')), 
                      end_cap = circle(4, 'mm')) + 
-      # Configurar nodos
+      # Configurar nodos (color por comunidad detección automática)
       geom_node_point(aes(color = as.factor(group)), size = 6, alpha = 0.8) + 
       # Etiquetas de nodos, usando ggrepel para evitar solapamientos
       geom_node_text(aes(label = name), repel = TRUE, size = 3, fontface = "bold", color = "#1a202c") +
@@ -119,6 +122,8 @@ generate_static_report <- function(g, output_path) {
       labs(title = "NexusGraph: Inteligencia de Fuentes Abiertas",
            subtitle = "Esquema estático de las entidades y sus relaciones",
            caption = paste("Generado el:", Sys.time())) +
+      # Escala de color explícita para evitar fallos con factor de un solo nivel
+      scale_edge_color_discrete(na.value = "grey50") +
       theme(legend.position = "bottom", legend.title = element_blank())
     
     # Exportar a disco
@@ -127,4 +132,5 @@ generate_static_report <- function(g, output_path) {
   }, error = function(e) {
     stop(paste("[Error] Fallo al generar gráfico estático:", e$message))
   })
+  invisible(output_path)  # Retornar ruta para composabilidad
 }
