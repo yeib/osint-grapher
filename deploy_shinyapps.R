@@ -64,6 +64,10 @@ tryCatch({
 })
 
 tryCatch({
+  # Forzar el repositorio a un espejo de CRAN estándar para evitar que ShinyApps.io 
+  # intente descargar paquetes usando el esquema "RSPM/src/contrib" de GitHub Actions
+  options(repos = c(CRAN = "https://cloud.r-project.org"))
+  
   rsconnect::deployApp(
     appDir    = "shinyapp",         # Directorio con app.R y módulos
     appName   = "nexusgraph",       # Nombre de la app en shinyapps.io
