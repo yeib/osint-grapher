@@ -28,21 +28,14 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y pandoc
 
-      # 4. Cachear las librerías de R para acelerar futuras ejecuciones del CI
-      - name: Cache R packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: r-${{ runner.os }}-${{ hashFiles('install_packages.R') }}
-          restore-keys: r-${{ runner.os }}-
-
-      # 5. Instalar dependencias de R del proyecto
+      # 4. Instalar todas las dependencias (R y sistema) usando pak (oficial)
+      # Esto lee automáticamente el archivo DESCRIPTION, detecta que usamos igraph,
+      # ggraph, etc. y se encarga de hacer apt-get install de libxml2, libglpk, etc.
       - name: Install R dependencies
-        run: Rscript install_packages.R
-
-      # 6. Instalar testthat (solo necesaria para el entorno de CI, no para el usuario)
-      - name: Install testthat
-        run: Rscript -e 'if (!requireNamespace("testthat", quietly = TRUE)) install.packages("testthat", repos = "https://cran.rstudio.com/")'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
 
       # 7. Correr la suite de tests
       - name: Run unit tests
