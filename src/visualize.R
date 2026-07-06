@@ -11,12 +11,11 @@ suppressPackageStartupMessages(library(ggraph))
 # ggrepel es una dependencia indirecta requerida por geom_node_text(repel = TRUE)
 suppressPackageStartupMessages(library(ggrepel))
 
-#' @name generate_interactive_html
-#' @description Crea un archivo HTML independiente con el visor de grafos de red.
+#' @name build_visnetwork_object
+#' @description Crea el widget interactivo de visNetwork sin guardarlo a disco. Útil para Shiny.
 #' @param g Objeto igraph.
-#' @param output_path Ruta destino donde se guardará el HTML.
-#' @return Ninguno (exporta archivo a disco).
-generate_interactive_html <- function(g, output_path) {
+#' @return Objeto visNetwork.
+build_visnetwork_object <- function(g) {
   # Extraer datos de la estructura igraph a formato visNetwork
   data <- toVisNetworkData(g)
   
@@ -35,8 +34,6 @@ generate_interactive_html <- function(g, output_path) {
   if ("type" %in% colnames(data$edges)) {
     # El título se mostrará como un tooltip al pasar el mouse por encima
     data$edges$title <- paste("Tipo de relación:", data$edges$type)
-    # Mostramos la etiqueta en la línea solo si no es abrumador (opcional)
-    # data$edges$label <- data$edges$type 
   }
   
   # Asignar grosor de aristas basado en su peso
@@ -64,6 +61,17 @@ generate_interactive_html <- function(g, output_path) {
       navigationButtons = TRUE, 
       zoomView = TRUE
     )
+    
+  return(vis)
+}
+
+#' @name generate_interactive_html
+#' @description Crea un archivo HTML independiente con el visor de grafos de red.
+#' @param g Objeto igraph.
+#' @param output_path Ruta destino donde se guardará el HTML.
+#' @return Ninguno (exporta archivo a disco).
+generate_interactive_html <- function(g, output_path) {
+  vis <- build_visnetwork_object(g)
   
   # Crear carpeta destino si no existe
   dir.create(dirname(output_path), showWarnings = FALSE, recursive = TRUE)

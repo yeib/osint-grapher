@@ -15,5 +15,15 @@ if ! command -v Rscript &> /dev/null; then
     exit 1
 fi
 
-# Pasar todos los argumentos recibidos directamente a main.R
-Rscript src/main.R "$@"
+# Si el usuario pide la interfaz web local, lanzamos Shiny
+if [ "$1" == "--web" ]; then
+    echo "=================================================="
+    echo " 🌐 Iniciando NexusGraph Web UI (Localhost)..."
+    echo "=================================================="
+    # host 0.0.0.0 permite que sea accesible si corre en un servidor/VPS,
+    # mientras que launch.browser evita que intente abrir el navegador en entornos headless.
+    Rscript -e "shiny::runApp('src/app.R', port=3838, host='0.0.0.0', launch.browser=FALSE)"
+else
+    # Pasar todos los argumentos recibidos directamente a main.R para modo CLI
+    Rscript src/main.R "$@"
+fi

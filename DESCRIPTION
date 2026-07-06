@@ -17,6 +17,9 @@ Imports:
     ggplot2,
     ggraph,
     ggrepel,
-    optparse
+    optparse,
+    shiny,
+    bslib,
+    shinyjs
 Suggests: 
     testthat

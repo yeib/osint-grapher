@@ -7,13 +7,16 @@ cat("Verificando e instalando paquetes de R requeridos para NexusGraph...\n\n")
 required_packages <- c(
   "dplyr", 
   "readr", 
-  "readxl", # Soporte para archivos Excel (.xlsx)
-  "igraph", 
-  "visNetwork", 
-  "ggplot2", 
-  "ggraph", 
-  "ggrepel",  # Requerido por geom_node_text(repel = TRUE) en ggraph
-  "optparse"
+  "readxl",     # Leer Excel
+  "igraph",     # Lógica matemática de grafos
+  "visNetwork", # Generación del HTML interactivo
+  "ggplot2",    # Base para gráficos estáticos
+  "ggraph",     # Geometrías de grafos para ggplot2
+  "ggrepel",    # Etiquetas que no se solapan
+  "optparse",   # Parseo de argumentos de consola
+  "shiny",      # Interfaz gráfica local
+  "bslib",      # Temas modernos (Bootstrap 5) para Shiny
+  "shinyjs"     # Funciones extra de JS para Shiny
 )
 
 # Detectar cuáles faltan
