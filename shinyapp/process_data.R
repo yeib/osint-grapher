@@ -141,6 +141,7 @@ compute_network_metrics <- function(g) {
   # cluster_louvain requiere al menos 2 nodos. Con 1 nodo, asignamos comunidad 1 directamente.
   if (vcount(g) >= 2) {
     g_undirected <- as_undirected(g, mode = "collapse")
+    set.seed(42)  # Garantiza reproducibilidad de comunidades entre recargas
     communities <- cluster_louvain(g_undirected)
     V(g)$group <- membership(communities)
     V(g)$community <- paste("Comunidad", membership(communities))

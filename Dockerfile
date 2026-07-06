@@ -4,7 +4,7 @@ FROM rocker/r-ver:4.4
 
 LABEL maintainer="yeib"
 LABEL description="NexusGraph: CSV/Excel a grafos interactivos OSINT"
-LABEL version="0.1.0"
+LABEL version="0.2.0"
 
 # ── Dependencias del sistema ──────────────────────────────────────────────────
 # pandoc: requerido por visSave() para generar HTML auto-contenido

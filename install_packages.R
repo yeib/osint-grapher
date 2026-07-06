@@ -26,8 +26,10 @@ new_packages <- required_packages[!(required_packages %in% installed.packages()[
 # Instalar los faltantes (dependencies=TRUE garantiza que las subdependencias
 # como libxml2, glpk, etc. también se instalen cuando son paquetes R puro)
 if (length(new_packages)) {
-  cat("Se instalarán los siguientes paquetes:", paste(new_packages, collapse = ", "), "\n")
-  install.packages(new_packages, repos = "https://cran.rstudio.com/", dependencies = TRUE)
+  for (pkg in new_packages) {
+    cat(sprintf("[Instalando] %s...\n", pkg))
+    install.packages(pkg, dependencies = TRUE)
+  }
 } else {
   cat("¡Todos los paquetes necesarios ya están instalados!\n")
 }

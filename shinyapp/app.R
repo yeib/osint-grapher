@@ -230,17 +230,15 @@ server <- function(input, output, session) {
     on.exit(removeNotification(id), add = TRUE)
 
     tryCatch({
-      # Aplicar filtros si vienen de los inputs (cuando el origen es archivo)
-      if (!is.null(input$file)) {
-        tipos_filtro <- NULL
-        if (trimws(input$tipos) != "") {
-          tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
-        }
-        df <- df %>%
-          dplyr::filter(Peso >= input$min_peso)
-        if (!is.null(tipos_filtro)) {
-          df <- df %>% dplyr::filter(Tipo_Relacion %in% tipos_filtro)
-        }
+      # Aplicar filtros SIEMPRE, independiente de si el origen es demo o archivo.
+      # Esto garantiza que los sliders reaccionen de forma consistente en ambos casos.
+      tipos_filtro <- NULL
+      if (trimws(input$tipos) != "") {
+        tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
+      }
+      df <- df %>% dplyr::filter(Peso >= input$min_peso)
+      if (!is.null(tipos_filtro)) {
+        df <- df %>% dplyr::filter(Tipo_Relacion %in% tipos_filtro)
       }
 
       g <- generate_graph(df, directed = !input$undirected)
@@ -302,9 +300,9 @@ server <- function(input, output, session) {
       g <- graph_data()
       req(g)
       tmp <- paste0(file, ".png")
+      on.exit(if (file.exists(tmp)) file.remove(tmp), add = TRUE)
       generate_static_report(g, tmp)
       file.copy(tmp, file)
-      file.remove(tmp)
     }
   )
 }
