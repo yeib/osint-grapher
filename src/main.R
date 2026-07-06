@@ -25,7 +25,22 @@ option_list <- list(
   
   make_option(c("-s", "--static"), type = "character", default = NULL,
               help = "Ruta opcional para generar una imagen estática (PNG o PDF). Si se omite, no se genera.", 
-              metavar = "Ruta")
+              metavar = "Ruta"),
+  
+  make_option(c("--sheet"), type = "character", default = "1",
+              help = "Nombre o número de la hoja de Excel a leer [Por defecto: %default]", 
+              metavar = "Hoja"),
+
+  make_option(c("--min-peso"), type = "numeric", default = 0,
+              help = "Ignorar relaciones con Peso menor a este valor [Por defecto: %default]", 
+              metavar = "Min"),
+  
+  make_option(c("--tipo"), type = "character", default = NULL,
+              help = "Filtrar por tipos de relación específicos, separados por coma (ej: 'Amigo,Enemigo')", 
+              metavar = "Tipos"),
+  
+  make_option(c("--undirected"), action = "store_true", default = FALSE,
+              help = "Genera un grafo no dirigido (relaciones bidireccionales)")
 )
 
 opt_parser <- OptionParser(
@@ -50,29 +65,53 @@ cat("==================================================\n")
 cat("      🚀 Iniciando NexusGraph Analyzer \n")
 cat("==================================================\n\n")
 
-# Paso A: Lectura y Limpieza
-cat("[1/3] Leyendo y validando datos crudos...\n")
-cat("      -> Origen:", opt$input, "\n")
-df <- load_and_clean_data(opt$input)
-cat("      -> Listo. Encontradas", nrow(df), "relaciones válidas (tras limpieza).\n\n")
+withCallingHandlers(
+  {
+    # Paso A: Lectura y Limpieza
+    cat("[1/4] Leyendo y validando datos crudos...\n")
+    cat("      -> Origen:", opt$input, "\n")
+    
+    # Procesar filtros (tipos separados por coma)
+    tipos_filtro <- NULL
+    if (!is.null(opt$tipo)) {
+      tipos_filtro <- trimws(unlist(strsplit(opt$tipo, ",")))
+    }
 
-# Paso B: Creación del Modelo
-cat("[2/3] Construyendo el modelo matemático de red...\n")
-g <- generate_graph(df)
-cat("      -> Listo. Red compuesta por", vcount(g), "entidades (nodos) y", ecount(g), "conexiones (aristas).\n\n")
+    df <- load_and_clean_data(opt$input, sheet = opt$sheet, min_peso = opt$`min-peso`, tipos = tipos_filtro)
+    cat("      -> Listo. Encontradas", nrow(df), "relaciones válidas (tras limpieza y filtros).\n\n")
 
-# Paso C: Visualización y Exportación
-cat("[3/3] Renderizando salidas gráficas...\n")
+    # Paso B: Creación del Modelo
+    cat("[2/4] Construyendo el modelo matemático de red...\n")
+    g <- generate_graph(df, directed = !opt$undirected)
+    cat("      -> Listo. Red compuesta por", vcount(g), "entidades (nodos) y", ecount(g), "conexiones (aristas).\n\n")
 
-# Interactivo siempre se genera (a menos que haya un error fatal)
-generate_interactive_html(g, opt$output)
+    # Paso C: Inteligencia y Métricas de Red
+    cat("[3/4] Calculando métricas de centralidad y comunidades...\n")
+    g <- compute_network_metrics(g)
+    cat("      -> Listo. Nodos coloreados por comunidad automáticamente.\n\n")
 
-# Estático solo se genera si el usuario lo solicitó explícitamente
-if (!is.null(opt$static)) {
-  cat("\n      [Opcional] Generando reporte estático...\n")
-  generate_static_report(g, opt$static)
-}
+    # Mostrar top nodos por consola
+    print_top_nodes(g)
 
-cat("\n==================================================\n")
-cat(" 🎉 ¡Proceso completado con éxito! \n")
-cat("==================================================\n")
+    # Paso D: Visualización y Exportación
+    cat("[4/4] Renderizando salidas gráficas...\n")
+
+    # Interactivo siempre se genera (a menos que haya un error fatal)
+    generate_interactive_html(g, opt$output)
+    
+    # Estático solo se genera si el usuario lo solicitó explícitamente
+    if (!is.null(opt$static)) {
+      cat("\n      [Opcional] Generando reporte estático...\n")
+      generate_static_report(g, opt$static)
+    }
+    
+    cat("\n==================================================\n")
+    cat(" 🎉 ¡Proceso completado con éxito! \n")
+    cat("==================================================\n")
+  },
+  error = function(e) {
+    cat("\n❌ [Error Fatal]", conditionMessage(e), "\n")
+    cat("Abortando NexusGraph. Revisa tu archivo de entrada o los parámetros usados.\n")
+    quit(status = 1)
+  }
+)

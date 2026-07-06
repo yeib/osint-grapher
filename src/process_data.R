@@ -12,8 +12,11 @@ suppressPackageStartupMessages(library(igraph))
 #' @name load_and_clean_data
 #' @description Lee un archivo CSV y limpia los datos, eliminando valores nulos y relaciones duplicadas.
 #' @param file_path Ruta al archivo CSV.
+#' @param sheet Hoja de Excel a leer (si aplica).
+#' @param min_peso Umbral mínimo de peso para incluir la relación.
+#' @param tipos Vector de tipos de relación a incluir (NULL para todos).
 #' @return Un dataframe limpio con las columnas Origen, Destino, Tipo_Relacion y Peso.
-load_and_clean_data <- function(file_path) {
+load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL) {
   # Verificar si el archivo existe
   if (!file.exists(file_path)) {
     stop(paste("[Error] El archivo de datos no fue encontrado en la ruta:", file_path))
@@ -25,7 +28,11 @@ load_and_clean_data <- function(file_path) {
   # Leer el archivo dependiendo de su extensión
   df <- tryCatch({
     if (ext %in% c("xls", "xlsx")) {
-      read_excel(file_path)
+      # Si sheet es número en string, intentar convertir
+      if (!is.na(suppressWarnings(as.numeric(sheet)))) {
+        sheet <- as.numeric(sheet)
+      }
+      read_excel(file_path, sheet = sheet)
     } else {
       read_csv(file_path, show_col_types = FALSE)
     }
@@ -64,16 +71,24 @@ load_and_clean_data <- function(file_path) {
   # - Elimina relaciones exactamente duplicadas (mismos Origen + Destino + Tipo)
   df_clean <- df %>%
     filter(!is.na(Origen) & !is.na(Destino)) %>%
+    filter(Peso >= min_peso) %>%
     distinct(Origen, Destino, Tipo_Relacion, .keep_all = TRUE)
+  
+  # Filtrar por tipos de relación si se especificaron
+  if (!is.null(tipos)) {
+    df_clean <- df_clean %>% filter(Tipo_Relacion %in% tipos)
+  }
+
   
   return(df_clean)
 }
 
 #' @name generate_graph
-#' @description Convierte el dataframe estructurado en un objeto de tipo grafo dirigido.
+#' @description Convierte el dataframe estructurado en un objeto de tipo grafo dirigido o no dirigido.
 #' @param df Dataframe limpio (salida de load_and_clean_data).
+#' @param directed Lógico, TRUE para grafo dirigido.
 #' @return Objeto igraph.
-generate_graph <- function(df) {
+generate_graph <- function(df, directed = TRUE) {
   # Validar que el dataframe no esté vacío tras la limpieza
   if (nrow(df) == 0) {
     stop("[Error] El archivo no contiene relaciones válidas tras la limpieza. Verifica que los campos Origen y Destino no estén todos vacíos.")
@@ -94,8 +109,55 @@ generate_graph <- function(df) {
     mutate(type = as.factor(type))
   
   # Generar el modelo matemático
-  # directed = TRUE asume que la relación va de Origen -> Destino
-  g <- graph_from_data_frame(d = edges, vertices = nodes, directed = TRUE)
+  g <- graph_from_data_frame(d = edges, vertices = nodes, directed = directed)
   
   return(g)
 }
+
+#' @name compute_network_metrics
+#' @description Calcula centralidades y comunidades, agregándolas como atributos a los nodos.
+#' @param g Grafo igraph.
+#' @return Grafo igraph con nuevos atributos en sus vértices.
+compute_network_metrics <- function(g) {
+  # Métricas de centralidad
+  V(g)$degree <- degree(g, mode = "all")
+  V(g)$betweenness <- round(betweenness(g, directed = is_directed(g)), 2)
+  
+  # Detección de comunidades (clusters)
+  # Louvain es muy rápido y bueno para redes grandes. Solo funciona en grafos no dirigidos
+  # así que temporalmente lo convertimos para el cálculo.
+  g_undirected <- as_undirected(g, mode = "collapse")
+  communities <- cluster_louvain(g_undirected)
+  
+  # Asignamos el grupo a cada nodo
+  V(g)$group <- membership(communities)
+  V(g)$community <- paste("Comunidad", membership(communities))
+  
+  return(g)
+}
+
+#' @name print_top_nodes
+#' @description Imprime un reporte por consola de los nodos más conectados (hubs).
+#' @param g Grafo igraph con métricas calculadas.
+print_top_nodes <- function(g) {
+  # Extraer datos de nodos
+  nodes_df <- data.frame(
+    name = V(g)$name,
+    degree = V(g)$degree,
+    betweenness = V(g)$betweenness,
+    community = V(g)$community,
+    stringsAsFactors = FALSE
+  )
+  
+  top_hubs <- nodes_df %>% 
+    arrange(desc(degree), desc(betweenness)) %>% 
+    head(5)
+  
+  cat("📊 Top Entidades Más Conectadas (Hubs):\n")
+  for(i in 1:nrow(top_hubs)) {
+    cat(sprintf("   %d. %-15s — %d conexiones (Betweenness: %.2f | %s)\n", 
+                i, top_hubs$name[i], top_hubs$degree[i], top_hubs$betweenness[i], top_hubs$community[i]))
+  }
+  cat("\n")
+}
+

@@ -22,10 +22,14 @@ generate_interactive_html <- function(g, output_path) {
   
   # Configurar estética de los nodos (diseño corporativo y limpio)
   data$nodes$shape <- "dot"
-  data$nodes$color.background <- "#2a4365" # Azul oscuro elegante
   data$nodes$color.border <- "#1a365d"
   data$nodes$font.color <- "#2d3748"
   data$nodes$shadow <- TRUE
+  
+  # Si no hay grupos (comunidades), usar el azul por defecto
+  if (!"group" %in% colnames(data$nodes)) {
+    data$nodes$color.background <- "#2a4365"
+  }
   
   # Configurar propiedades de las aristas (edges)
   if ("type" %in% colnames(data$edges)) {
@@ -99,7 +103,7 @@ generate_static_report <- function(g, output_path) {
                      arrow = arrow(length = unit(2, 'mm')), 
                      end_cap = circle(4, 'mm')) + 
       # Configurar nodos
-      geom_node_point(size = 6, color = "#2a4365", alpha = 0.8) + 
+      geom_node_point(aes(color = as.factor(group)), size = 6, alpha = 0.8) + 
       # Etiquetas de nodos, usando ggrepel para evitar solapamientos
       geom_node_text(aes(label = name), repel = TRUE, size = 3, fontface = "bold", color = "#1a202c") +
       # Estilo y tema
