@@ -11,14 +11,19 @@ Herramienta de código abierto escrita en **R** para transformar archivos de dat
 
 ```
 nexusgraph/
-├── src/
-│   ├── main.R           # Orquestador CLI
+├── R/                   # Módulos principales del paquete
 │   ├── process_data.R   # Lectura, limpieza y métricas de red
-│   ├── visualize.R      # Exportación HTML interactivo y PNG
-│   └── app.R            # Interfaz web local (Shiny)
+│   └── visualize.R      # Exportación HTML interactivo y PNG
+├── src/                 # Entrada de CLI y web local
+│   ├── main.R           # Orquestador CLI
+│   └── app.R            # Interfaz web local (Shiny, usa R/)
+├── shinyapp/            # App lista para desplegar en shinyapps.io
+│   ├── app.R            # Interfaz Shiny (auto-contenida)
+│   ├── process_data.R   # Copia sincronizada desde R/ para deploy
+│   └── visualize.R      # Copia sincronizada desde R/ para deploy
 ├── data/                # Archivos de entrada (.csv / .xlsx)
 ├── output/              # Reportes generados (ignorados por git)
-├── tests/               # Suite de tests unitarios (55 tests)
+├── tests/               # Suite de tests unitarios (39 test_that / 55 expect_*)
 └── nexusgraph.sh        # Wrapper principal de ejecución
 ```
 
@@ -128,10 +133,12 @@ El archivo debe contener al menos las columnas `Origen` y `Destino`:
 
 | Columna | Requerida | Descripción |
 |---------|-----------|-------------|
-| `Origen` | ✅ | Entidad de origen de la relación |
-| `Destino` | ✅ | Entidad de destino de la relación |
+| `Origen` | ✅ (o cualquier columna) | Entidad de origen de la relación |
+| `Destino` | ✅ (o cualquier columna) | Entidad de destino de la relación |
 | `Tipo_Relacion` | ❌ | Tipo de vínculo (ej: Empleado, Aliado). Default: `Desconocido` |
 | `Peso` | ❌ | Intensidad numérica de la relación. Default: `1` |
+
+> 💡 **No tienes columnas "Origen" y "Destino"?** ¡No hay problema! La interfaz web detecta los encabezados de tu archivo y te muestra un menú para seleccionar qué columna cumple cada rol.
 
 ### Ejemplo
 
