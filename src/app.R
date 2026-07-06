@@ -60,11 +60,21 @@ ui <- page_sidebar(
                    class = "btn-outline-secondary w-100"),
 
     hr(class = "my-3"),
-    tags$small(
-      class = "text-muted",
-      "NexusGraph v0.2.0 · ",
-      tags$a("GitHub", href = "https://github.com/yeib/osint-grapher",
-             target = "_blank", class = "text-muted")
+    div(
+      class = "text-center",
+      tags$small(
+        class = "text-muted",
+        "NexusGraph v0.2.0 · ",
+        tags$a("GitHub", href = "https://github.com/yeib/osint-grapher", target = "_blank", class = "text-muted")
+      ),
+      br(),
+      tags$small(
+        class = "text-muted",
+        "Hecho con ❤️ by ",
+        tags$a("Yeib!", href = "https://yeib.cl", target = "_blank", class = "text-info text-decoration-none fw-bold"),
+        " | ",
+        tags$a("yeib@pm.me", href = "mailto:yeib@pm.me", class = "text-muted text-decoration-none")
+      )
     )
   ),
 
