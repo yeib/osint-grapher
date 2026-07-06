@@ -1,6 +1,10 @@
 # install_packages.R
 # Script de conveniencia para instalar todas las dependencias necesarias de NexusGraph
 
+# Repo CRAN explícito: evita el prompt interactivo de "Choose a mirror"
+# en entornos CI/CD limpios o instalaciones sin configuración previa.
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
 cat("Verificando e instalando paquetes de R requeridos para NexusGraph...\n\n")
 
 # Lista de paquetes requeridos
