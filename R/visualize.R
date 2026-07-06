@@ -23,8 +23,8 @@ build_visnetwork_object <- function(g) {
   
   # Configurar estética de los nodos (diseño corporativo y limpio)
   data$nodes$shape <- "dot"
-  data$nodes$color.border <- "#1a365d"
-  data$nodes$font.color <- "#2d3748"
+  data$nodes$color.border <- "#4299e1" # Azul más claro para que resalte
+  data$nodes$font.color <- "#ffffff" # Texto blanco legible en modo oscuro
   data$nodes$shadow <- TRUE
   
   # Si no hay grupos (comunidades), usar el azul por defecto
