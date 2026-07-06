@@ -1,6 +1,6 @@
 #!/bin/bash
 # Wrapper script para NexusGraph.
-# Permite invocar el análisis directamente desde la terminal.
+# Permite invocar el análisis CLI o la interfaz web desde la terminal.
 
 # Detectar el directorio donde vive este script y hacer cd a él.
 # Esto garantiza que las rutas relativas funcionen sin importar
@@ -15,15 +15,35 @@ if ! command -v Rscript &> /dev/null; then
     exit 1
 fi
 
-# Si el usuario pide la interfaz web local, lanzamos Shiny
-if [ "$1" == "--web" ]; then
+# Parsear argumentos para detectar --web y --port en cualquier posición
+WEB_MODE=false
+PORT=3838
+CLI_ARGS=()
+
+for arg in "$@"; do
+    case "$arg" in
+        --web)
+            WEB_MODE=true
+            ;;
+        --port=*)
+            PORT="${arg#--port=}"
+            ;;
+        *)
+            CLI_ARGS+=("$arg")
+            ;;
+    esac
+done
+
+if [ "$WEB_MODE" = true ]; then
     echo "=================================================="
-    echo " 🌐 Iniciando NexusGraph Web UI (Localhost)..."
+    echo " 🌐 Iniciando NexusGraph Web UI"
+    echo " → http://localhost:${PORT}"
     echo "=================================================="
-    # host 0.0.0.0 permite que sea accesible si corre en un servidor/VPS,
-    # mientras que launch.browser evita que intente abrir el navegador en entornos headless.
-    Rscript -e "shiny::runApp('src/app.R', port=3838, host='0.0.0.0', launch.browser=FALSE)"
+    # Pasamos la raíz del proyecto como variable de entorno para que app.R
+    # pueda resolver sus rutas sin depender del CWD ni de sys.frame() hacks.
+    NEXUSGRAPH_ROOT="$SCRIPT_DIR" \
+        Rscript -e "shiny::runApp('src/app.R', port=${PORT}, host='0.0.0.0', launch.browser=FALSE)"
 else
-    # Pasar todos los argumentos recibidos directamente a main.R para modo CLI
-    Rscript src/main.R "$@"
+    # Pasar todos los argumentos CLI directamente a main.R
+    Rscript src/main.R "${CLI_ARGS[@]}"
 fi

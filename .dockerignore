@@ -1,0 +1,28 @@
+# .dockerignore para NexusGraph
+# Excluimos archivos que no deben entrar en la imagen Docker
+
+# Control de versiones
+.git
+.github
+.gitignore
+
+# Artefactos de salida (se generan en runtime)
+output/
+
+# Archivos de desarrollo
+*.Rproj
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Tests (no necesarios en producción)
+tests/
+
+# Documentación de desarrollo
+nexusgraph_roadmap.md
+PLAN.md
+
+# Temporales
+*.log
+*.tmp

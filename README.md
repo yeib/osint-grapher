@@ -1,6 +1,9 @@
 # 📊 NexusGraph
 
 [![CI](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml/badge.svg)](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml)
+[![R](https://img.shields.io/badge/R-%3E%3D4.1-blue)](https://www.r-project.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 Herramienta de código abierto escrita en **R** para transformar archivos de datos tabulares (CSV o Excel) en **grafos interactivos de red**, con análisis automático de centralidad y detección de comunidades. Ideal para OSINT, análisis de redes sociales y visualización de relaciones entre entidades.
 
@@ -21,7 +24,23 @@ nexusgraph/
 
 ## 🚀 Instalación
 
-### 1. Requisitos del Sistema
+### Opción A — Docker (recomendado, sin instalar R)
+
+```bash
+# Construir la imagen
+docker build -t nexusgraph .
+
+# Modo CLI: analizar un archivo local
+docker run --rm \
+  -v $(pwd)/data:/nexusgraph/data \
+  -v $(pwd)/output:/nexusgraph/output \
+  nexusgraph -i data/mi_archivo.csv
+
+# Modo Web UI: abrir en http://localhost:3838
+docker run --rm -p 3838:3838 nexusgraph --web
+```
+
+### Opción B — Instalación local con R
 
 NexusGraph requiere **R (≥ 4.1)** y **pandoc**:
 
