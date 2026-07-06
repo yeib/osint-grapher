@@ -43,7 +43,7 @@ jobs:
       - name: Install R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rsconnect, any::dplyr, any::shiny, any::bslib, any::shinyjs, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel, any::readr, any::readxl, any::htmltools
+          extra-packages: any::rsconnect, any::dplyr, any::shiny, any::bslib, any::shinyjs, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel, any::readr, any::readxl, any::htmltools, any::cpp11, any::progress, any::RcppArmadillo
           cache-version: 2
 
       # Ejecutar el script de despliegue usando los secretos de GitHub
