@@ -109,12 +109,13 @@ generate_static_report <- function(g, output_path) {
   
   # Renderizado gráfico con ggraph (diseño Fruchterman-Reingold)
   tryCatch({
+    is_dir <- is_directed(g)
     p <- ggraph(g, layout = 'fr') + 
       # Configurar aristas
       geom_edge_link(aes(edge_alpha = weight, edge_width = weight, color = type), 
-                     arrow = arrow(length = unit(2, 'mm')), 
+                     arrow = if (is_dir) arrow(length = unit(2, 'mm')) else NULL,
                      end_cap = circle(4, 'mm')) + 
-      # Configurar nodos (color por comunidad detección automática)
+      # Configurar nodos (color por comunidad detección automática)\
       geom_node_point(aes(color = as.factor(group)), size = 6, alpha = 0.8) + 
       # Etiquetas de nodos, usando ggrepel para evitar solapamientos
       geom_node_text(aes(label = name), repel = TRUE, size = 3, fontface = "bold", color = "#1a202c") +
@@ -123,12 +124,14 @@ generate_static_report <- function(g, output_path) {
       labs(title = "NexusGraph: Inteligencia de Fuentes Abiertas",
            subtitle = "Esquema estático de las entidades y sus relaciones",
            caption = paste("Generado el:", Sys.time())) +
-      # Escala de color explícita para evitar fallos con factor de un solo nivel
+      # Escalas explícitas para evitar warnings de ggplot2 con datasets uniformes
+      scale_edge_alpha(range = c(0.3, 1), guide = "none") +
+      scale_edge_width(range = c(0.5, 3), guide = "none") +
       scale_edge_color_discrete(na.value = "grey50") +
       theme(legend.position = "bottom", legend.title = element_blank())
     
-    # Exportar a disco
-    ggsave(output_path, plot = p, width = 12, height = 9, bg = "white", dpi = 300)
+    # Exportar a disco con dispositivo PNG explícito (evita problemas en entornos headless)
+    ggsave(output_path, plot = p, width = 12, height = 9, bg = "white", dpi = 300, device = "png")
     cat("[Éxito] Reporte estático de alta resolución exportado en:", output_path, "\n")
   }, error = function(e) {
     stop(paste("[Error] Fallo al generar gráfico estático:", e$message))
