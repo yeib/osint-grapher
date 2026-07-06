@@ -83,7 +83,7 @@ tryCatch({
         if (any(grepl("Repository:.*RSPM", lines) | grepl("Repository:.*CRAN", lines))) {
           lines <- gsub("Repository:.*RSPM", "Repository: https://cloud.r-project.org", lines)
           lines <- gsub("Repository:.*CRAN", "Repository: https://cloud.r-project.org", lines)
-          writeLines(lines, desc_file)
+          try(writeLines(lines, desc_file), silent = TRUE)
         }
       }
     }
