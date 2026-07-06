@@ -190,10 +190,8 @@ server <- function(input, output, session) {
           )
         ))
       } else {
-        # Formato clásico
-        tipos_filtro <- NULL
-        if (trimws(input$tipos) != "") tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
-        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = input$min_peso, tipos = tipos_filtro)
+        # Cargar los datos puros sin filtros, para que graph_data() aplique los filtros dinámicamente
+        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = 0, tipos = NULL)
         data_source(df)
       }
     }, error = function(e) {
@@ -204,13 +202,11 @@ server <- function(input, output, session) {
   observeEvent(input$confirm_map, {
     removeModal()
     tryCatch({
-      tipos_filtro <- NULL
-      if (trimws(input$tipos) != "") tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
-      
+      # Cargar los datos puros sin filtros
       df <- load_and_clean_data(input$file$datapath,
                                 sheet    = input$sheet,
-                                min_peso = input$min_peso,
-                                tipos    = tipos_filtro, 
+                                min_peso = 0,
+                                tipos    = NULL, 
                                 col_origen = input$col_origen_map,
                                 col_destino = input$col_destino_map,
                                 col_peso = if (input$col_peso_map == "Ninguna") "Peso" else input$col_peso_map,
@@ -236,7 +232,11 @@ server <- function(input, output, session) {
       if (trimws(input$tipos) != "") {
         tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
       }
-      df <- df %>% dplyr::filter(Peso >= input$min_peso)
+      # Manejar el caso donde el usuario borra el input numérico dejándolo en NA
+      min_p <- input$min_peso
+      if (is.na(min_p)) min_p <- 0
+      
+      df <- df %>% dplyr::filter(Peso >= min_p)
       if (!is.null(tipos_filtro)) {
         df <- df %>% dplyr::filter(Tipo_Relacion %in% tipos_filtro)
       }
