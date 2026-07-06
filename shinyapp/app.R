@@ -158,17 +158,56 @@ server <- function(input, output, session) {
       return()
     }
     tryCatch({
-      tipos_filtro <- NULL
-      if (trimws(input$tipos) != "") {
-        tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
+      # Leer primera fila para chequear encabezados
+      if (ext %in% c("xls", "xlsx")) {
+        tmp_df <- readxl::read_excel(input$file$datapath, n_max = 1)
+      } else {
+        tmp_df <- readr::read_csv(input$file$datapath, n_max = 1, show_col_types = FALSE)
       }
+      
+      cols <- colnames(tmp_df)
+      if (!("Origen" %in% cols && "Destino" %in% cols)) {
+        showModal(modalDialog(
+          title = "Mapeo de Columnas",
+          p("El CSV no tiene columnas llamadas 'Origen' y 'Destino'. Selecciona cuáles usar:"),
+          selectInput("col_origen_map", "Columna de Origen:", choices = cols),
+          selectInput("col_destino_map", "Columna de Destino:", choices = cols, selected = if(length(cols)>1) cols[2] else cols[1]),
+          selectInput("col_tipo_map", "Columna de Tipo (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+          selectInput("col_peso_map", "Columna de Peso (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+          footer = tagList(
+            modalButton("Cancelar"),
+            actionButton("confirm_map", "Aceptar y Generar", class = "btn-primary")
+          )
+        ))
+      } else {
+        # Formato clásico
+        tipos_filtro <- NULL
+        if (trimws(input$tipos) != "") tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
+        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = input$min_peso, tipos = tipos_filtro)
+        data_source(df)
+      }
+    }, error = function(e) {
+      showNotification(paste("❌ Error al leer el archivo:", e$message), type = "error", duration = 10)
+    })
+  })
+
+  observeEvent(input$confirm_map, {
+    removeModal()
+    tryCatch({
+      tipos_filtro <- NULL
+      if (trimws(input$tipos) != "") tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
+      
       df <- load_and_clean_data(input$file$datapath,
                                 sheet    = input$sheet,
                                 min_peso = input$min_peso,
-                                tipos    = tipos_filtro)
+                                tipos    = tipos_filtro, 
+                                col_origen = input$col_origen_map,
+                                col_destino = input$col_destino_map,
+                                col_peso = if (input$col_peso_map == "Ninguna") "Peso" else input$col_peso_map,
+                                col_tipo = if (input$col_tipo_map == "Ninguna") "Tipo_Relacion" else input$col_tipo_map)
       data_source(df)
     }, error = function(e) {
-      showNotification(paste("❌ Error al leer el archivo:", e$message), type = "error", duration = 10)
+      showNotification(paste("❌ Error al procesar:", e$message), type = "error", duration = 10)
     })
   })
 

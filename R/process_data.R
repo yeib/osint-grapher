@@ -15,8 +15,14 @@ suppressPackageStartupMessages(library(igraph))
 #' @param sheet Hoja de Excel a leer (si aplica).
 #' @param min_peso Umbral mínimo de peso para incluir la relación.
 #' @param tipos Vector de tipos de relación a incluir (NULL para todos).
+#' @param col_origen Nombre de la columna que representa el Origen (default: "Origen")
+#' @param col_destino Nombre de la columna que representa el Destino (default: "Destino")
+#' @param col_peso Nombre de la columna que representa el Peso (default: "Peso")
+#' @param col_tipo Nombre de la columna que representa el Tipo_Relacion (default: "Tipo_Relacion")
 #' @return Un dataframe limpio con las columnas Origen, Destino, Tipo_Relacion y Peso.
-load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL) {
+load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL,
+                                col_origen = "Origen", col_destino = "Destino", 
+                                col_peso = "Peso", col_tipo = "Tipo_Relacion") {
   # Verificar si el archivo existe
   if (!file.exists(file_path)) {
     stop(paste("[Error] El archivo de datos no fue encontrado en la ruta:", file_path))
@@ -40,11 +46,17 @@ load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL
     stop(paste("[Error] Fallo al leer el archivo. Verifica el formato.", e$message))
   })
   
+  # Mapeo dinámico de columnas
+  if (col_origen %in% colnames(df)) colnames(df)[colnames(df) == col_origen] <- "Origen"
+  if (col_destino %in% colnames(df)) colnames(df)[colnames(df) == col_destino] <- "Destino"
+  if (col_peso %in% colnames(df)) colnames(df)[colnames(df) == col_peso] <- "Peso"
+  if (col_tipo %in% colnames(df)) colnames(df)[colnames(df) == col_tipo] <- "Tipo_Relacion"
+  
   # Validar columnas mínimas requeridas
   required_cols <- c("Origen", "Destino")
   missing_cols <- setdiff(required_cols, colnames(df))
   if (length(missing_cols) > 0) {
-    stop(paste("[Error] El CSV no contiene las columnas requeridas:", paste(missing_cols, collapse = ", ")))
+    stop(paste("[Error] El CSV no contiene las columnas seleccionadas como Origen/Destino. (Seleccionado:", col_origen, "y", col_destino, ")"))
   }
   
   # IMPORTANTE: Las columnas opcionales deben crearse/normalizarse ANTES de usarlas
