@@ -64,6 +64,32 @@ tryCatch({
 })
 
 tryCatch({
+  # =========================================================================
+  # FIX para GitHub Actions + ShinyApps.io + RSPM/CRAN:
+  # setup-r-dependencies instala desde RSPM/CRAN y marca el DESCRIPTION con "Repository: CRAN" o "RSPM".
+  # rsconnect/renv copia esto al manifest.json, y ShinyApps.io explota al intentar 
+  # leer la URL "CRAN/src/contrib/...".
+  # Solución: Reescribir "Repository: CRAN/RSPM" a "Repository: https://cloud.r-project.org" 
+  # en TODOS los paquetes locales para forzar una URL HTTP válida en el manifest.
+  # =========================================================================
+  cat("🔧 Aplicando fix de repositorios (CRAN/RSPM -> HTTPS) en la librería local...\n")
+  for (lib in .libPaths()) {
+    pkgs <- list.files(lib, full.names = TRUE)
+    for (pkg in pkgs) {
+      desc_file <- file.path(pkg, "DESCRIPTION")
+      if (file.exists(desc_file)) {
+        lines <- readLines(desc_file, warn = FALSE)
+        if (any(grepl("Repository:.*RSPM", lines) | grepl("Repository:.*CRAN", lines))) {
+          lines <- gsub("Repository:.*RSPM", "Repository: https://cloud.r-project.org", lines)
+          lines <- gsub("Repository:.*CRAN", "Repository: https://cloud.r-project.org", lines)
+          try(writeLines(lines, desc_file), silent = TRUE)
+        }
+      }
+    }
+  }
+  options(repos = c(CRAN = "https://cloud.r-project.org"))
+  cat("✅ Fix de repositorios (URL) aplicado.\n\n")
+
   rsconnect::deployApp(
     appDir    = "shinyapp",         # Directorio con app.R y módulos
     appName   = "nexusgraph",       # Nombre de la app en shinyapps.io
