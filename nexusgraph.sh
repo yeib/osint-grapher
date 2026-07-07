@@ -46,7 +46,7 @@ if [ "$WEB_MODE" = true ]; then
     # Pasamos la raíz del proyecto como variable de entorno para que app.R
     # pueda resolver sus rutas sin depender del CWD ni de sys.frame() hacks.
     NEXUSGRAPH_ROOT="$SCRIPT_DIR" \
-        Rscript -e "shiny::runApp('src/app.R', port=${PORT}, host='0.0.0.0', launch.browser=FALSE)"
+        Rscript -e "shiny::runApp('shinyapp', port=${PORT}, host='0.0.0.0', launch.browser=FALSE)"
 else
     # Pasar todos los argumentos CLI directamente a main.R
     Rscript src/main.R "${CLI_ARGS[@]}"

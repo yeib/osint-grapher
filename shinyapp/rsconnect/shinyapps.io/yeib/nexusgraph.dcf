@@ -5,6 +5,6 @@ account: yeib
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17586522
-bundleId: 12229864
+bundleId: 12229966
 url: https://yeib.shinyapps.io/nexusgraph/
 version: 1

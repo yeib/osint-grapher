@@ -191,7 +191,7 @@ server <- function(input, output, session) {
         ))
       } else {
         # Cargar los datos puros sin filtros, para que graph_data() aplique los filtros dinámicamente
-        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = 0, tipos = NULL)
+        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = 0, tipos = NULL, ext = ext)
         data_source(df)
       }
     }, error = function(e) {
@@ -210,7 +210,8 @@ server <- function(input, output, session) {
                                 col_origen = input$col_origen_map,
                                 col_destino = input$col_destino_map,
                                 col_peso = if (input$col_peso_map == "Ninguna") "Peso" else input$col_peso_map,
-                                col_tipo = if (input$col_tipo_map == "Ninguna") "Tipo_Relacion" else input$col_tipo_map)
+                                col_tipo = if (input$col_tipo_map == "Ninguna") "Tipo_Relacion" else input$col_tipo_map,
+                                ext = tolower(tools::file_ext(input$file$name)))
       data_source(df)
     }, error = function(e) {
       showNotification(paste("❌ Error al procesar:", e$message), type = "error", duration = 10)

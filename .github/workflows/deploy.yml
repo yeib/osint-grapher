@@ -1,19 +1,17 @@
 name: Deploy to shinyapps.io
 
 on:
-  push:
+  workflow_run:
+    workflows: ["NexusGraph CI"]
+    types:
+      - completed
     branches:
       - main
-    paths:
-      # Deploy si cambian los módulos principales O la app de shinyapps.io
-      - 'R/**'
-      - 'shinyapp/**'
-      - 'deploy_shinyapps.R'
-      - '.github/workflows/deploy.yml'
 
 jobs:
   deploy:
     name: Deploy Shiny App
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     
     steps:

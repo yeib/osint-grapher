@@ -22,14 +22,16 @@ suppressPackageStartupMessages(library(igraph))
 #' @return Un dataframe limpio con las columnas Origen, Destino, Tipo_Relacion y Peso.
 load_and_clean_data <- function(file_path, sheet = 1, min_peso = 0, tipos = NULL,
                                 col_origen = "Origen", col_destino = "Destino", 
-                                col_peso = "Peso", col_tipo = "Tipo_Relacion") {
+                                col_peso = "Peso", col_tipo = "Tipo_Relacion", ext = NULL) {
   # Verificar si el archivo existe
   if (!file.exists(file_path)) {
     stop(paste("[Error] El archivo de datos no fue encontrado en la ruta:", file_path))
   }
   
   # Determinar la extensión del archivo
-  ext <- tolower(tools::file_ext(file_path))
+  if (is.null(ext)) {
+    ext <- tolower(tools::file_ext(file_path))
+  }
   
   # Leer el archivo dependiendo de su extensión
   df <- tryCatch({
