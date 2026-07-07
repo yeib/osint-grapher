@@ -52,4 +52,8 @@ jobs:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
+          sudo chown -R $USER:$USER /opt/R || true
+          sudo chown -R $USER:$USER /usr/local/lib/R || true
+          sudo chown -R $USER:$USER ${{ env.R_LIBS_USER }} || true
+          sudo chmod -R 777 /opt/R || true
           Rscript deploy_shinyapps.R
