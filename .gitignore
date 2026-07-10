@@ -1,0 +1,8 @@
+output/*
+!output/.gitkeep
+
+# Artefactos de R y RStudio
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj

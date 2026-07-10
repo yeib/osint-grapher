@@ -1,0 +1,58 @@
+name: NexusGraph CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Run Tests (Ubuntu, R stable)
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Instalar R usando la action oficial de r-lib
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'   # Siempre la última versión estable de R
+
+      # 3. Instalar dependencias del sistema (pandoc es requerido por visSave)
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y pandoc
+
+      # 4. Instalar todas las dependencias (R y sistema) usando pak (oficial)
+      # Lee automáticamente DESCRIPTION, instala librerías de sistema (libxml2, libglpk, etc.)
+      # cache-version activa el caché de paquetes para que runs sucesivos tarden segundos.
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::dplyr, any::igraph, any::visNetwork, any::ggplot2, any::ggraph, any::ggrepel, any::readr, any::readxl, any::htmltools, any::optparse, any::shiny, any::bslib, any::shinyjs
+          cache-version: 2
+
+      # 5. Correr la suite de tests unitarios
+      - name: Run unit tests
+        run: Rscript tests/run_tests.R
+
+      # 6. Prueba de integración end-to-end con datos de muestra (commiteados en /data)
+      - name: Integration test (end-to-end run with marvel_sample.csv)
+        run: |
+          chmod +x nexusgraph.sh
+          ./nexusgraph.sh -i data/marvel_sample.csv -o output/reporte.html
+
+      # 7. Verificar que el HTML fue generado correctamente
+      - name: Verify HTML output was created
+        run: |
+          if [ ! -f "output/reporte.html" ]; then
+            echo "❌ ERROR: El archivo output/reporte.html no fue generado."
+            exit 1
+          fi
+          echo "✅ output/reporte.html generado correctamente."
+          ls -lh output/reporte.html

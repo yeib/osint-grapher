@@ -1,0 +1,27 @@
+Package: nexusgraph
+Type: Package
+Title: Herramienta OSINT para Transformar CSV en Grafos Interactivos
+Version: 0.2.0
+Author: yeib
+Maintainer: yeib <yeib@pm.me>
+Description: Procesa archivos de datos tabulares y los convierte en visualizaciones 
+  de redes usando igraph, visNetwork y ggraph.
+License: MIT
+Encoding: UTF-8
+Imports: 
+    dplyr,
+    readr,
+    readxl,
+    igraph,
+    visNetwork,
+    ggplot2,
+    ggraph,
+    ggrepel,
+    optparse,
+    htmltools,
+    tools,
+    shiny,
+    bslib,
+    shinyjs
+Suggests: 
+    testthat
