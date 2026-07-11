@@ -22,16 +22,18 @@ build_visnetwork_object <- function(g, height = "100%") {
   # Extraer datos de la estructura igraph a formato visNetwork
   data <- toVisNetworkData(g)
   
-  # Configurar estética de los nodos (diseño corporativo y limpio)
+  # Configurar estética de los nodos
   data$nodes$shape <- "dot"
-  data$nodes$color.border <- "#4299e1" # Azul más claro para que resalte
-  data$nodes$font.color <- "#ffffff" # Texto blanco legible en modo oscuro
+  data$nodes$font.color <- "#ffffff" # Texto blanco legible
   data$nodes$shadow <- TRUE
   
   # Si no hay grupos (comunidades), usar el azul por defecto
   if (!"group" %in% colnames(data$nodes)) {
     data$nodes$color.background <- "#2a4365"
   }
+  
+  # Tooltips para dar feedback visual al hacer hover en nodos
+  data$nodes$title <- htmlEscape(paste("Entidad:", data$nodes$name))
   
   # Configurar propiedades de las aristas (edges)
   if ("type" %in% colnames(data$edges)) {
@@ -48,21 +50,35 @@ build_visnetwork_object <- function(g, height = "100%") {
   vis <- visNetwork(nodes = data$nodes, edges = data$edges, 
                     main = "NexusGraph", submain = "Análisis Interactivo de Vínculos", 
                     width = "100%", height = height) %>%
+    visNodes(
+      borderWidth = 1,
+      borderWidthSelected = 3,
+      color = list(
+        hover = list(border = "#ffffff") # Borde blanco brillante al hacer hover, mantiene el color del nodo
+      )
+    ) %>%
     visOptions(
-      highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE), # Resalta vecinos al hacer hover
-      nodesIdSelection = TRUE # Permite buscar por nombre de nodo
+      highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE),
+      nodesIdSelection = TRUE
     ) %>%
     visPhysics(
-      stabilization = TRUE,
-      solver = "forceAtlas2Based" # Motor físico óptimo para grafos densos
+      solver = "forceAtlas2Based",
+      forceAtlas2Based = list(damping = 0.8, avoidOverlap = 0.8),
+      stabilization = list(enabled = TRUE, iterations = 400)
+    ) %>%
+    visEvents(
+      type = "once",
+      stabilizationIterationsDone = "function() { this.setOptions({physics: false}); }",
+      stabilized = "function() { this.setOptions({physics: false}); }"
     ) %>%
     visEdges(
-      arrows = if (is_dir) "to" else "",  # Flechas solo en grafos dirigidos
+      arrows = if (is_dir) "to" else "",
       color = list(color = "#a0aec0", highlight = "#3182ce")
     ) %>%
     visInteraction(
       navigationButtons = TRUE, 
-      zoomView = TRUE
+      zoomView = TRUE,
+      hover = TRUE
     )
     
   return(vis)

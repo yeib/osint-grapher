@@ -43,10 +43,11 @@ if [ "$WEB_MODE" = true ]; then
     echo " 🌐 Iniciando NexusGraph Web UI"
     echo " → http://localhost:${PORT}"
     echo "=================================================="
-    # Pasamos la raíz del proyecto como variable de entorno para que app.R
-    # pueda resolver sus rutas sin depender del CWD ni de sys.frame() hacks.
+    echo "DEBUG: PWD is $(pwd)"
+    echo "DEBUG: shinyapp contents:"
+    ls -la shinyapp
     NEXUSGRAPH_ROOT="$SCRIPT_DIR" \
-        Rscript -e "shiny::runApp('shinyapp', port=${PORT}, host='0.0.0.0', launch.browser=FALSE)"
+        Rscript -e "cat('Sourcing app.R manually: ', file.exists('shinyapp/app.R'), '\n'); shiny::runApp('shinyapp', port=${PORT}, host='0.0.0.0', launch.browser=FALSE)"
 else
     # Pasar todos los argumentos CLI directamente a main.R
     Rscript src/main.R "${CLI_ARGS[@]}"

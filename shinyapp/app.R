@@ -20,7 +20,6 @@ ui <- page_sidebar(
   sidebar = sidebar(
     width = 320,
     useShinyjs(),
-
     # ── Datos de entrada ──────────────────────────────────────────────────────
     tags$h6("📂 Datos de Entrada", class = "text-uppercase text-muted fw-bold mb-2"),
     fileInput("file", NULL,
@@ -44,6 +43,9 @@ ui <- page_sidebar(
     textInput("tipos", "Tipos de Relación (separados por coma)",
               placeholder = "ej: Aliado, Familiar"),
     checkboxInput("undirected", "Grafo No Dirigido (bidireccional)", value = FALSE),
+
+    tags$h6("⚙️ Configuración", class = "text-uppercase text-muted fw-bold mb-2 mt-3"),
+    actionButton("btn_remap", "🔄 Re-mapear columnas", class = "btn-warning w-100"),
 
     hr(class = "my-2"),
 
@@ -82,13 +84,42 @@ ui <- page_sidebar(
   # ── Panel Principal ─────────────────────────────────────────────────────────
   layout_columns(
     col_widths = c(12),
+    
+    tags$head(tags$style(HTML("
+      /* Global Loading Overlay triggered natively by Shiny */
+      #global-loader {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(33, 37, 41, 0.85);
+        z-index: 99999; color: white; text-align: center;
+        flex-direction: column; justify-content: center; align-items: center;
+      }
+      html.shiny-busy #global-loader {
+        display: flex !important;
+      }
+      .spinner-border { width: 4rem; height: 4rem; margin-bottom: 1rem; color: #0dcaf0; }
+      
+      /* Fullscreen fixes to stretch graph when card is expanded */
+      .card:fullscreen #graph, .card:-webkit-full-screen #graph { height: calc(100vh - 80px) !important; }
+      .card:fullscreen .vis-network, .card:-webkit-full-screen .vis-network { height: calc(100vh - 80px) !important; }
+    "))),
+    
+    tags$div(id = "global-loader",
+      tags$div(class = "spinner-border", role = "status"),
+      tags$h3("Procesando datos pesados..."),
+      tags$p("Por favor espera, no cierres esta ventana.", class = "text-muted")
+    ),
 
     card(
+      min_height = "600px",
       full_screen = TRUE,
       card_header(
         class = "d-flex justify-content-between align-items-center",
         "Grafo Interactivo",
-        tags$small("Arrastra nodos · Zoom · Hover para detalles", class = "text-muted")
+        div(
+          tags$small("Arrastra nodos · Zoom · Hover para detalles", class = "text-muted me-3"),
+          actionButton("btn_fullscreen", "🔲 Fullscreen", class = "btn btn-sm btn-warning text-dark fw-bold", title = "Ver grafo a pantalla completa")
+        )
       ),
       # Pantalla de bienvenida
       conditionalPanel(
@@ -113,7 +144,7 @@ ui <- page_sidebar(
       ),
       conditionalPanel(
         condition = "output.graph_ready",
-        visNetworkOutput("graph", height = "480px")
+        visNetworkOutput("graph", height = "600px")
       )
     ),
 
@@ -160,61 +191,96 @@ server <- function(input, output, session) {
   observeEvent(input$load_demo,  { data_source(DEMO_DATA) })
   observeEvent(input$load_demo2, { data_source(DEMO_DATA) })
 
-  # Cargar desde archivo subido
-  observeEvent(input$file, {
+  # Re-mapear columnas
+  observeEvent(input$btn_remap, {
+    req(input$file)
     ext <- tolower(tools::file_ext(input$file$name))
-    if (!ext %in% c("csv", "xls", "xlsx")) {
-      showNotification(paste("❌ Formato no soportado:", ext), type = "error", duration = 8)
-      return()
-    }
     tryCatch({
-      # Leer primera fila para chequear encabezados
       if (ext %in% c("xls", "xlsx")) {
         tmp_df <- readxl::read_excel(input$file$datapath, n_max = 1)
       } else {
         tmp_df <- readr::read_csv(input$file$datapath, n_max = 1, show_col_types = FALSE)
       }
-      
       cols <- colnames(tmp_df)
-      if (!("Origen" %in% cols && "Destino" %in% cols)) {
-        showModal(modalDialog(
-          title = "Mapeo de Columnas",
-          p("El CSV no tiene columnas llamadas 'Origen' y 'Destino'. Selecciona cuáles usar:"),
-          selectInput("col_origen_map", "Columna de Origen:", choices = cols),
-          selectInput("col_destino_map", "Columna de Destino:", choices = cols, selected = if(length(cols)>1) cols[2] else cols[1]),
-          selectInput("col_tipo_map", "Columna de Tipo (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
-          selectInput("col_peso_map", "Columna de Peso (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
-          footer = tagList(
-            modalButton("Cancelar"),
-            actionButton("confirm_map", "Aceptar y Generar", class = "btn-primary")
-          )
-        ))
-      } else {
-        # Cargar los datos puros sin filtros, para que graph_data() aplique los filtros dinámicamente
-        df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = 0, tipos = NULL, ext = ext)
-        data_source(df)
-      }
+      showModal(modalDialog(
+        title = "Mapeo de Columnas",
+        p("Selecciona cuáles columnas de tu archivo original deseas usar:"),
+        selectInput("col_origen_map", "Columna de Origen:", choices = cols),
+        selectInput("col_destino_map", "Columna de Destino:", choices = cols, selected = if(length(cols)>1) cols[2] else cols[1]),
+        selectInput("col_tipo_map", "Columna de Tipo (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+        selectInput("col_peso_map", "Columna de Peso (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+        footer = tagList(
+          modalButton("Cancelar"),
+          actionButton("confirm_map", "Aceptar y Recalcular", class = "btn-primary")
+        )
+      ))
     }, error = function(e) {
-      showNotification(paste("❌ Error al leer el archivo:", e$message), type = "error", duration = 10)
+      showNotification(paste("❌ Error:", e$message), type = "error")
+    })
+  })
+
+  # Cargar desde archivo subido
+  observeEvent(input$file, {
+    withProgress(message = "Subiendo y analizando archivo...", detail = "Por favor espera...", value = 0.5, {
+      ext <- tolower(tools::file_ext(input$file$name))
+      if (!ext %in% c("csv", "xls", "xlsx")) {
+        showNotification(paste("❌ Formato no soportado:", ext), type = "error", duration = 8)
+        return()
+      }
+      tryCatch({
+        # Leer primera fila para chequear encabezados
+        if (ext %in% c("xls", "xlsx")) {
+          tmp_df <- readxl::read_excel(input$file$datapath, n_max = 1)
+        } else {
+          tmp_df <- readr::read_csv(input$file$datapath, n_max = 1, show_col_types = FALSE)
+        }
+        
+        cols <- colnames(tmp_df)
+        if (!("Origen" %in% cols && "Destino" %in% cols)) {
+          showModal(modalDialog(
+            title = "Mapeo de Columnas",
+            p("El CSV no tiene columnas llamadas 'Origen' y 'Destino'. Selecciona cuáles usar:"),
+            selectInput("col_origen_map", "Columna de Origen:", choices = cols),
+            selectInput("col_destino_map", "Columna de Destino:", choices = cols, selected = if(length(cols)>1) cols[2] else cols[1]),
+            selectInput("col_tipo_map", "Columna de Tipo (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+            selectInput("col_peso_map", "Columna de Peso (opcional):", choices = c("Ninguna", cols), selected = "Ninguna"),
+            footer = tagList(
+              modalButton("Cancelar"),
+              actionButton("confirm_map", "Aceptar y Generar", class = "btn-primary")
+            )
+          ))
+        } else {
+          incProgress(0.3, detail = "Leyendo datos completos...")
+          # Cargar los datos puros sin filtros, para que graph_data() aplique los filtros dinámicamente
+          df <- load_and_clean_data(input$file$datapath, sheet = input$sheet, min_peso = 0, tipos = NULL, ext = ext)
+          data_source(df)
+          incProgress(0.2, detail = "¡Listo!")
+        }
+      }, error = function(e) {
+        showNotification(paste("❌ Error al leer el archivo:", e$message), type = "error", duration = 10)
+      })
     })
   })
 
   observeEvent(input$confirm_map, {
     removeModal()
-    tryCatch({
-      # Cargar los datos puros sin filtros
-      df <- load_and_clean_data(input$file$datapath,
-                                sheet    = input$sheet,
-                                min_peso = 0,
-                                tipos    = NULL, 
-                                col_origen = input$col_origen_map,
-                                col_destino = input$col_destino_map,
-                                col_peso = if (input$col_peso_map == "Ninguna") "Peso" else input$col_peso_map,
-                                col_tipo = if (input$col_tipo_map == "Ninguna") "Tipo_Relacion" else input$col_tipo_map,
-                                ext = tolower(tools::file_ext(input$file$name)))
-      data_source(df)
-    }, error = function(e) {
-      showNotification(paste("❌ Error al procesar:", e$message), type = "error", duration = 10)
+    withProgress(message = "Procesando archivo con mapeo...", detail = "Mapeando columnas...", value = 0.5, {
+      tryCatch({
+        # Cargar los datos puros sin filtros
+        df <- load_and_clean_data(input$file$datapath,
+                                  sheet    = input$sheet,
+                                  min_peso = 0,
+                                  tipos    = NULL, 
+                                  col_origen = input$col_origen_map,
+                                  col_destino = input$col_destino_map,
+                                  col_peso = if (input$col_peso_map == "Ninguna") "Peso" else input$col_peso_map,
+                                  col_tipo = if (input$col_tipo_map == "Ninguna") "Tipo_Relacion" else input$col_tipo_map,
+                                  ext = tolower(tools::file_ext(input$file$name)))
+        data_source(df)
+        incProgress(0.5, detail = "¡Listo!")
+      }, error = function(e) {
+        showNotification(paste("❌ Error al procesar:", e$message), type = "error", duration = 10)
+      })
     })
   })
 
@@ -223,31 +289,35 @@ server <- function(input, output, session) {
     df <- data_source()
     req(df)
 
-    id <- showNotification("⏳ Construyendo el grafo…", duration = NULL, closeButton = FALSE)
-    on.exit(removeNotification(id), add = TRUE)
+    withProgress(message = "Construyendo el grafo...", detail = "Aplicando filtros y calculando métricas...", value = 0.3, {
+      tryCatch({
+        # Aplicar filtros SIEMPRE, independiente de si el origen es demo o archivo.
+        # Esto garantiza que los sliders reaccionen de forma consistente en ambos casos.
+        tipos_filtro <- NULL
+        if (trimws(input$tipos) != "") {
+          tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
+        }
+        # Manejar el caso donde el usuario borra el input numérico dejándolo en NA
+        min_p <- input$min_peso
+        if (is.na(min_p)) min_p <- 0
+        
+        df <- df %>% dplyr::filter(Peso >= min_p)
+        if (!is.null(tipos_filtro)) {
+          df <- df %>% dplyr::filter(Tipo_Relacion %in% tipos_filtro)
+        }
 
-    tryCatch({
-      # Aplicar filtros SIEMPRE, independiente de si el origen es demo o archivo.
-      # Esto garantiza que los sliders reaccionen de forma consistente en ambos casos.
-      tipos_filtro <- NULL
-      if (trimws(input$tipos) != "") {
-        tipos_filtro <- trimws(unlist(strsplit(input$tipos, ",")))
-      }
-      # Manejar el caso donde el usuario borra el input numérico dejándolo en NA
-      min_p <- input$min_peso
-      if (is.na(min_p)) min_p <- 0
-      
-      df <- df %>% dplyr::filter(Peso >= min_p)
-      if (!is.null(tipos_filtro)) {
-        df <- df %>% dplyr::filter(Tipo_Relacion %in% tipos_filtro)
-      }
-
-      g <- generate_graph(df, directed = !input$undirected)
-      g <- compute_network_metrics(g)
-      return(g)
-    }, error = function(e) {
-      showNotification(paste("❌ Error:", e$message), type = "error", duration = 10)
-      return(NULL)
+        incProgress(0.3, detail = "Generando red interactiva...")
+        g <- generate_graph(df, directed = !input$undirected)
+        
+        incProgress(0.3, detail = "Calculando centralidades y comunidades...")
+        g <- compute_network_metrics(g)
+        
+        incProgress(0.1, detail = "¡Completado!")
+        return(g)
+      }, error = function(e) {
+        showNotification(paste("❌ Error:", e$message), type = "error", duration = 10)
+        return(NULL)
+      })
     })
   })
 
@@ -282,6 +352,19 @@ server <- function(input, output, session) {
     g <- graph_data()
     req(g)
     print_top_nodes(g)
+  })
+
+  # ── Pantalla Completa ────────────────────────────────────────────────────────
+  observeEvent(input$btn_fullscreen, {
+    shinyjs::runjs("
+      var card = document.querySelector('.card');
+      if (card) {
+        if (card.requestFullscreen) { card.requestFullscreen(); }
+        else if (card.webkitRequestFullscreen) { card.webkitRequestFullscreen(); }
+        else if (card.msRequestFullscreen) { card.msRequestFullscreen(); }
+        setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 200);
+      }
+    ")
   })
 
   # ── Descarga HTML ────────────────────────────────────────────────────────────
