@@ -67,8 +67,8 @@ ui <- page_sidebar(
       class = "text-center",
       tags$small(
         class = "text-muted",
-        "NexusGraph v0.2.0 · ",
-        tags$a("GitHub", href = "https://github.com/yeib/osint-grapher", target = "_blank", class = "text-muted")
+        "NexusGraph v0.4.0 · ",
+        tags$a(href = "https://github.com/yeib/osint-grapher", "GitHub", target = "_blank", class = "text-decoration-none")
       ),
       br(),
       tags$small(
