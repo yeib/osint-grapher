@@ -1,15 +1,32 @@
-# 📊 NexusGraph
+<div align="center">
+
+```text
+    _   __                     ______                 __  
+   / | / /__  _  ____  _______/ ____/________ _____  / /_ 
+  /  |/ / _ \| |/_/ / / / ___/ / __/ ___/ __ `/ __ \/ __ \
+ / /|  /  __/>  </ /_/ (__  ) /_/ / /  / /_/ / /_/ / / / /
+/_/ |_/\___/_/|_|\__,_/____/\____/_/   \__,_/ .___/_/ /_/ 
+                                           /_/            
+```
+
+**Advanced OSINT Graph Visualization & Network Analysis Engine**
 
 [![CI](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml/badge.svg)](https://github.com/yeib/osint-grapher/actions/workflows/ci.yml)
 [![R](https://img.shields.io/badge/R-%3E%3D4.1-blue)](https://www.r-project.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
+</div>
+
+<br>
+
 Herramienta de código abierto escrita en **R** para transformar archivos de datos tabulares (CSV o Excel) en **grafos interactivos de red**, con análisis automático de centralidad y detección de comunidades. Ideal para OSINT, análisis de redes sociales y visualización de relaciones entre entidades.
 
-## 📁 Estructura
+---
 
-```
+## Estructura
+
+```text
 nexusgraph/
 ├── R/                   # Módulos principales del paquete
 │   ├── process_data.R   # Lectura, limpieza y métricas de red
@@ -27,9 +44,11 @@ nexusgraph/
 └── nexusgraph.sh        # Wrapper principal de ejecución
 ```
 
-## 🚀 Instalación
+---
 
-### Opción A — Docker (recomendado, sin instalar R)
+## Instalación
+
+### Opción A — Docker (Recomendado, sin instalar R)
 
 ```bash
 # Construir la imagen
@@ -76,13 +95,15 @@ sudo apt-get install -y r-base pandoc
 brew install r pandoc
 ```
 
-### 2. Dependencias de R
+Dependencias de R:
 
 ```bash
 Rscript install_packages.R
 ```
 
-## 🖥️ Uso — Modo CLI
+---
+
+## Uso — Modo CLI
 
 ```bash
 ./nexusgraph.sh -i data/marvel_sample.csv -o output/reporte.html
@@ -113,7 +134,9 @@ Rscript install_packages.R
 ./nexusgraph.sh -i data/red.csv --undirected -s output/red.png
 ```
 
-## 🌐 Uso — Interfaz Web Local
+---
+
+## Uso — Interfaz Web Local
 
 Para usuarios que prefieren una interfaz gráfica en el navegador:
 
@@ -127,38 +150,35 @@ Abre tu navegador en `http://localhost:3838`. Desde ahí puedes:
 - Ver el grafo interactivo con comunidades coloreadas
 - Descargar el reporte HTML o la imagen PNG
 
-## 📋 Formato del Archivo de Entrada
+---
+
+## Formato del Archivo de Entrada
 
 El archivo debe contener al menos las columnas `Origen` y `Destino`:
 
 | Columna | Requerida | Descripción |
 |---------|-----------|-------------|
-| `Origen` | ✅ (o cualquier columna) | Entidad de origen de la relación |
-| `Destino` | ✅ (o cualquier columna) | Entidad de destino de la relación |
-| `Tipo_Relacion` | ❌ | Tipo de vínculo (ej: Empleado, Aliado). Default: `Desconocido` |
-| `Peso` | ❌ | Intensidad numérica de la relación. Default: `1` |
+| `Origen` | Requerida (o cualquier columna) | Entidad de origen de la relación |
+| `Destino` | Requerida (o cualquier columna) | Entidad de destino de la relación |
+| `Tipo_Relacion` | Opcional | Tipo de vínculo (ej: Empleado, Aliado). Default: `Desconocido` |
+| `Peso` | Opcional | Intensidad numérica de la relación. Default: `1` |
 
-> 💡 **No tienes columnas "Origen" y "Destino"?** ¡No hay problema! La interfaz web detecta los encabezados de tu archivo y te muestra un menú para seleccionar qué columna cumple cada rol.
+**Nota:** Si no tienes columnas llamadas exactamente "Origen" y "Destino", la interfaz web detecta los encabezados de tu archivo y te muestra un menú para seleccionar qué columna cumple cada rol.
 
-### Ejemplo
+---
 
-```csv
-Origen,Destino,Tipo_Relacion,Peso
-Alice,Bob,Colega,3
-Bob,Carol,Familiar,5
-Carol,Alice,Amigo,2
-```
-
-## 🧠 Qué Analiza NexusGraph
+## Qué Analiza NexusGraph
 
 Al procesar cualquier dataset, la herramienta calcula automáticamente:
 
-- **Degree Centrality**: Quién tiene más conexiones (el "hub" de la red)
-- **Betweenness Centrality**: Quién actúa como "puente" entre grupos
-- **Detección de Comunidades** (Louvain): Grupos de entidades naturalmente relacionadas, coloreados automáticamente en el grafo
-- **Top 5 Entidades** más importantes, impresas en consola al finalizar
+- **Degree Centrality**: Quién tiene más conexiones (el nodo central de la red).
+- **Betweenness Centrality**: Quién actúa como puente o conector clave entre grupos.
+- **Detección de Comunidades (Louvain)**: Grupos de entidades naturalmente relacionadas, coloreados automáticamente en el grafo.
+- **Top 5 Entidades**: Las entidades más importantes, impresas en consola al finalizar.
 
-## 🧪 Tests
+---
+
+## Tests
 
 ```bash
 Rscript tests/run_tests.R
