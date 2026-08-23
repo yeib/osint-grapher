@@ -17,6 +17,14 @@ ui <- page_sidebar(
   theme       = bs_theme(version = 5, preset = "darkly"),
   fillable    = TRUE,
 
+  tags$head(
+    tags$link(rel = "icon", href = "https://nexusgraph.yeib.cl/favicon.ico", sizes = "any"),
+    tags$link(rel = "icon", type = "image/png", sizes = "512x512", href = "https://nexusgraph.yeib.cl/favicon.png"),
+    tags$link(rel = "icon", type = "image/svg+xml", href = "https://nexusgraph.yeib.cl/favicon.svg"),
+    tags$link(rel = "apple-touch-icon", href = "https://nexusgraph.yeib.cl/apple-touch-icon.png"),
+    tags$link(rel = "shortcut icon", href = "https://nexusgraph.yeib.cl/favicon.ico")
+  ),
+
   sidebar = sidebar(
     width = 320,
     useShinyjs(),
