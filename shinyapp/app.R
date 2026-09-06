@@ -20,11 +20,13 @@ ui <- page_sidebar(
   tags$head(
     tags$link(rel = "canonical", href = "https://nexusgraph.yeib.cl/"),
     tags$meta(name = "description", content = "NexusGraph: Plataforma de análisis y visualización interactiva de grafos y redes OSINT."),
-    tags$link(rel = "icon", href = "https://nexusgraph.yeib.cl/favicon.ico", sizes = "any"),
+    tags$link(rel = "icon", type = "image/png", sizes = "48x48", href = "https://nexusgraph.yeib.cl/favicon-48x48.png"),
+    tags$link(rel = "icon", type = "image/png", sizes = "96x96", href = "https://nexusgraph.yeib.cl/favicon-96x96.png"),
+    tags$link(rel = "icon", type = "image/png", sizes = "192x192", href = "https://nexusgraph.yeib.cl/favicon-192x192.png"),
     tags$link(rel = "icon", type = "image/png", sizes = "512x512", href = "https://nexusgraph.yeib.cl/favicon.png"),
     tags$link(rel = "icon", type = "image/svg+xml", href = "https://nexusgraph.yeib.cl/favicon.svg"),
     tags$link(rel = "apple-touch-icon", href = "https://nexusgraph.yeib.cl/apple-touch-icon.png"),
-    tags$link(rel = "shortcut icon", href = "https://nexusgraph.yeib.cl/favicon.ico")
+    tags$link(rel = "shortcut icon", href = "https://nexusgraph.yeib.cl/favicon.ico", type = "image/x-icon")
   ),
 
   sidebar = sidebar(
