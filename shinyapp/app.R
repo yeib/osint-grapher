@@ -18,6 +18,8 @@ ui <- page_sidebar(
   fillable    = TRUE,
 
   tags$head(
+    tags$link(rel = "canonical", href = "https://nexusgraph.yeib.cl/"),
+    tags$meta(name = "description", content = "NexusGraph: Plataforma de análisis y visualización interactiva de grafos y redes OSINT."),
     tags$link(rel = "icon", href = "https://nexusgraph.yeib.cl/favicon.ico", sizes = "any"),
     tags$link(rel = "icon", type = "image/png", sizes = "512x512", href = "https://nexusgraph.yeib.cl/favicon.png"),
     tags$link(rel = "icon", type = "image/svg+xml", href = "https://nexusgraph.yeib.cl/favicon.svg"),
@@ -84,7 +86,7 @@ ui <- page_sidebar(
         "Hecho con ❤️ by ",
         tags$a("Yeib!", href = "https://yeib.cl", target = "_blank", class = "text-info text-decoration-none fw-bold"),
         " | ",
-        tags$a("yeib@pm.me", href = "mailto:yeib@pm.me", class = "text-muted text-decoration-none")
+        HTML("<!--email_off--><a href=\"mailto:yeib@pm.me\" class=\"text-muted text-decoration-none\">yeib@pm.me</a><!--/email_off-->")
       )
     )
   ),
