@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="public/favicon-512x512.png" width="130" alt="NexusGraph Logo" style="border-radius: 26px; margin-bottom: 12px;" />
 
 ```text
     _   __                     ______                 __  
