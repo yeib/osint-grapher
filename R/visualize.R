@@ -17,7 +17,7 @@ suppressPackageStartupMessages(library(htmltools)) # Para escapar HTML en toolti
 #' @description Crea el widget interactivo de visNetwork sin guardarlo a disco. Útil para Shiny.
 #' @param g Objeto igraph.
 #' @return Objeto visNetwork.
-build_visnetwork_object <- function(g, height = "100%") {
+build_visnetwork_object <- function(g, height = "100%", main = NULL, submain = NULL) {
   is_dir <- is_directed(g)  # Detectar si el grafo es dirigido o no
   # Extraer datos de la estructura igraph a formato visNetwork
   data <- toVisNetworkData(g)
@@ -46,7 +46,7 @@ build_visnetwork_object <- function(g, height = "100%") {
   
   # Construir la visualización interactiva
   vis <- visNetwork(nodes = data$nodes, edges = data$edges, 
-                    main = "NexusGraph", submain = "Análisis Interactivo de Vínculos", 
+                    main = main, submain = submain, 
                     width = "100%", height = height) %>%
     visOptions(
       highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE), # Resalta vecinos al hacer hover

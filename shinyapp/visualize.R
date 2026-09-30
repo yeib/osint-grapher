@@ -17,23 +17,21 @@ suppressPackageStartupMessages(library(htmltools)) # Para escapar HTML en toolti
 #' @description Crea el widget interactivo de visNetwork sin guardarlo a disco. Útil para Shiny.
 #' @param g Objeto igraph.
 #' @return Objeto visNetwork.
-build_visnetwork_object <- function(g, height = "100%") {
+build_visnetwork_object <- function(g, height = "100%", main = NULL, submain = NULL) {
   is_dir <- is_directed(g)  # Detectar si el grafo es dirigido o no
   # Extraer datos de la estructura igraph a formato visNetwork
   data <- toVisNetworkData(g)
   
-  # Configurar estética de los nodos
+  # Configurar estética de los nodos (diseño corporativo y limpio)
   data$nodes$shape <- "dot"
-  data$nodes$font.color <- "#ffffff" # Texto blanco legible
+  data$nodes$color.border <- "#4299e1" # Azul más claro para que resalte
+  data$nodes$font.color <- "#ffffff" # Texto blanco legible en modo oscuro
   data$nodes$shadow <- TRUE
   
   # Si no hay grupos (comunidades), usar el azul por defecto
   if (!"group" %in% colnames(data$nodes)) {
     data$nodes$color.background <- "#2a4365"
   }
-  
-  # Tooltips para dar feedback visual al hacer hover en nodos
-  data$nodes$title <- htmlEscape(paste("Entidad:", data$nodes$name))
   
   # Configurar propiedades de las aristas (edges)
   if ("type" %in% colnames(data$edges)) {
@@ -48,37 +46,23 @@ build_visnetwork_object <- function(g, height = "100%") {
   
   # Construir la visualización interactiva
   vis <- visNetwork(nodes = data$nodes, edges = data$edges, 
-                    main = "NexusGraph", submain = "Análisis Interactivo de Vínculos", 
+                    main = main, submain = submain, 
                     width = "100%", height = height) %>%
-    visNodes(
-      borderWidth = 1,
-      borderWidthSelected = 3,
-      color = list(
-        hover = list(border = "#ffffff") # Borde blanco brillante al hacer hover, mantiene el color del nodo
-      )
-    ) %>%
     visOptions(
-      highlightNearest = list(enabled = TRUE, degree = 1, hover = FALSE),
-      nodesIdSelection = TRUE
+      highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE), # Resalta vecinos al hacer hover
+      nodesIdSelection = TRUE # Permite buscar por nombre de nodo
     ) %>%
     visPhysics(
-      solver = "forceAtlas2Based",
-      forceAtlas2Based = list(damping = 0.8, avoidOverlap = 0.8),
-      stabilization = list(enabled = TRUE, iterations = 400)
-    ) %>%
-    visEvents(
-      type = "once",
-      stabilizationIterationsDone = "function() { this.setOptions({physics: false}); }",
-      stabilized = "function() { this.setOptions({physics: false}); }"
+      stabilization = TRUE,
+      solver = "forceAtlas2Based" # Motor físico óptimo para grafos densos
     ) %>%
     visEdges(
-      arrows = if (is_dir) "to" else "",
+      arrows = if (is_dir) "to" else "",  # Flechas solo en grafos dirigidos
       color = list(color = "#a0aec0", highlight = "#3182ce")
     ) %>%
     visInteraction(
       navigationButtons = TRUE, 
-      zoomView = TRUE,
-      hover = TRUE
+      zoomView = TRUE
     )
     
   return(vis)

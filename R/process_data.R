@@ -162,40 +162,47 @@ compute_network_metrics <- function(g) {
 }
 
 
-#' @name print_top_nodes
-#' @description Imprime un reporte por consola de los nodos más conectados (hubs).
+#' @name get_top_nodes_data
+#' @description Devuelve los nodos más conectados junto con sus métricas.
 #' @param g Grafo igraph con métricas calculadas.
-print_top_nodes <- function(g) {
-  # Validar que el grafo tenga métricas calculadas
-  if (is.null(V(g)$degree)) {
-    cat("[Aviso] Métricas no calculadas. Ejecuta compute_network_metrics() primero.\n")
-    return(invisible(NULL))
-  }
-  
-  # Extraer datos de nodos
+#' @param n Número máximo de nodos a devolver.
+#' @return Un dataframe ordenado por degree y betweenness descendentes.
+get_top_nodes_data <- function(g, n = 5) {
+  if (is.null(V(g)$degree) || vcount(g) == 0) return(data.frame())
+
   nodes_df <- data.frame(
     name = V(g)$name,
     degree = V(g)$degree,
     betweenness = V(g)$betweenness,
     community = V(g)$community,
+    group = V(g)$group,
     stringsAsFactors = FALSE
   )
-  
-  top_hubs <- nodes_df %>% 
-    arrange(desc(degree), desc(betweenness)) %>% 
-    head(5)
-  
-  cat("\ud83d\udcca Top Entidades Más Conectadas (Hubs):\n")
-  
-  # Proteger contra dataframe vacío
+
+  nodes_df <- nodes_df[order(-nodes_df$degree, -nodes_df$betweenness), , drop = FALSE]
+  head(nodes_df, n)
+}
+
+#' @name print_top_nodes
+#' @description Imprime un reporte por consola de los nodos más conectados (hubs).
+#' @param g Grafo igraph con métricas calculadas.
+#' @param n Número máximo de nodos a imprimir.
+print_top_nodes <- function(g, n = 5) {
+  if (is.null(V(g)$degree)) {
+    cat("[Aviso] Métricas no calculadas. Ejecuta compute_network_metrics() primero.\n")
+    return(invisible(NULL))
+  }
+
+  top_hubs <- get_top_nodes_data(g, n = n)
+  cat("Top Entidades Más Conectadas (Hubs):\n")
+
   if (nrow(top_hubs) == 0) {
     cat("   (Sin nodos para mostrar con los filtros actuales)\n")
   } else {
     for (i in seq_len(nrow(top_hubs))) {
-      cat(sprintf("   %d. %-15s \u2014 %d conexiones (Betweenness: %.2f | %s)\n", 
+      cat(sprintf("   %d. %-15s — %d conexiones (Betweenness: %.2f | %s)\n",
                   i, top_hubs$name[i], top_hubs$degree[i], top_hubs$betweenness[i], top_hubs$community[i]))
     }
   }
   cat("\n")
 }
-
