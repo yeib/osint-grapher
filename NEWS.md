@@ -3,6 +3,24 @@
 Todas los cambios relevantes del proyecto se documentan en este archivo.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [0.5.0] — 2026-09-30
+
+### ✨ Rediseño Visual & UX
+- **Estética Dark Profesional**: Nueva paleta oscura sobria (`#0d1117`, estilo GitHub Dark / Vercel), bordes sutiles y tipografía técnica (`Inter` y `JetBrains Mono`).
+- **Micro-KPI Chips**: Barra compacta de métricas clave (Entidades, Conexiones, Comunidades) ubicada sobre el grafo, ocupando mínimo espacio vertical.
+- **Controles de Grafo Reorganizados (visNetwork)**:
+  - Pad direccional de navegación en esquina inferior izquierda.
+  - Botones de zoom (+ / -) y centrado automático (`vis-zoomExtends`) en esquina inferior derecha.
+  - Botón de pantalla completa cuadrado y discreto en esquina superior derecha.
+- **Acordeones Corregidos**: Fondos y contrastes asegurados en estados abierto y cerrado para evitar texto ilegible.
+- **Tabla de Entidades Destacadas**: Renderizado HTML con badges estructurados por ranking, grado, betweenness y comunidad.
+
+### 🛠️ Código & Arquitectura
+- **Desacople de Datos (`get_top_nodes_data`)**: Nueva función modular en `R/process_data.R` que separa el cómputo de métricas de la presentación en consola.
+- **Helper de Mapeo Unificado**: Eliminación de duplicación de modal de columnas en `shinyapp/app.R`.
+- **Limpieza de Scripts**: Retiro de mensajes residuales de depuración en `nexusgraph.sh`.
+- **Tests**: 100% de la suite pasando (55/55 assertions).
+
 ---
 
 ## [0.2.0] — 2026-07-06

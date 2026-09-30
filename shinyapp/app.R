@@ -281,7 +281,7 @@ ui <- page_sidebar(
     div(class = "mt-4 pt-3 border-top border-secondary text-center",
       tags$small(
         class = "text-muted",
-        "NexusGraph v0.4.0 · ",
+        "NexusGraph v0.5.0 · ",
         tags$a(href = "https://github.com/yeib/osint-grapher", "GitHub", target = "_blank",
                class = "text-decoration-none")
       ),
